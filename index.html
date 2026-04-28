@@ -84,7 +84,7 @@
                 </button>
             </nav>
             <div class="p-4 border-t border-slate-800 text-center space-y-3">
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v4.0</span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v4.5</span>
                 <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
             </div>
         </aside>
@@ -401,15 +401,16 @@
         ];
 
         const DEFAULT_RUNNER_UPS = [
-            { place: '2nd', schoolId: '', mark: '' },
-            { place: '3rd', schoolId: '', mark: '' },
-            { place: '4th', schoolId: '', mark: '' },
-            { place: '5th', schoolId: '', mark: '' }
+            { place: '2nd', schoolId: '', mark: '', athletes: '' },
+            { place: '3rd', schoolId: '', mark: '', athletes: '' },
+            { place: '4th', schoolId: '', mark: '', athletes: '' },
+            { place: '5th', schoolId: '', mark: '', athletes: '' }
         ];
 
         // --- State Variables ---
         let meets = JSON.parse(localStorage.getItem('sw_meets')) || [];
         let schools = JSON.parse(localStorage.getItem('sw_schools')) || DEFAULT_SCHOOLS;
+        
         schools.forEach(s => { if (!s.color2) s.color2 = '#020617'; });
 
         let results = JSON.parse(localStorage.getItem('sw_results')) || [];
@@ -425,7 +426,8 @@
         let swLogoTransform = { x: null, y: null, scale: 1 };
         let sponsorTransform = { x: null, y: null, scale: 1 };
         let photoTransform = { panX: 0, panY: 0, scale: 1 };
-        let hitBoxes = { sw: null, sponsor: null, photo: null };
+        let recordTransform = { x: null, y: null, scale: 1 };
+        let hitBoxes = { sw: null, sponsor: null, photo: null, record: null };
 
         // Syncs local variables to localStorage
         function saveData() {
@@ -736,16 +738,22 @@
             document.getElementById('gen-meet').innerHTML = '<option value="">Select Meet...</option>' + meets.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
             document.getElementById('gen-school').innerHTML = '<option value="">Select School...</option>' + schools.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
             
+            // Restore selection if valid
             if (meets.find(m => m.id === currentMeetId)) document.getElementById('gen-meet').value = currentMeetId;
             if (schools.find(s => s.id === currentSchoolId)) document.getElementById('gen-school').value = currentSchoolId;
 
             document.getElementById('runner-ups-container').innerHTML = runnerUps.map((ru, i)=>`
-                <div class="flex gap-2 items-center">
-                    <span class="text-[10px] font-black text-slate-500 w-6">${ru.place}</span>
-                    <select onchange="window.updateRU(${i},'schoolId',this.value)" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none">
-                        <option value="">School...</option>${schools.map(x=>`<option value="${x.id}" ${ru.schoolId === x.id ? 'selected' : ''}>${x.name}</option>`).join('')}
-                    </select>
-                    <input type="text" placeholder="Mark" value="${ru.mark}" oninput="window.updateRU(${i},'mark',this.value)" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none">
+                <div class="flex flex-col gap-1 mb-2 bg-slate-900/50 p-2 rounded border border-slate-800">
+                    <div class="flex gap-2 items-center">
+                        <span class="text-[10px] font-black text-slate-500 w-6">${ru.place}</span>
+                        <select onchange="window.updateRU(${i},'schoolId',this.value)" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none">
+                            <option value="">School...</option>${schools.map(x=>`<option value="${x.id}" ${ru.schoolId === x.id ? 'selected' : ''}>${x.name}</option>`).join('')}
+                        </select>
+                        <input type="text" placeholder="Mark" value="${ru.mark}" oninput="window.updateRU(${i},'mark',this.value)" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none">
+                    </div>
+                    <div class="flex gap-2 items-center pl-8">
+                        <input type="text" placeholder="Athlete Names (Optional)" value="${ru.athletes||''}" oninput="window.updateRU(${i},'athletes',this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none text-slate-400">
+                    </div>
                 </div>
             `).join('');
         };
@@ -772,6 +780,7 @@
             swLogoTransform = { x: null, y: null, scale: 1 };
             sponsorTransform = { x: null, y: null, scale: 1 };
             photoTransform = { panX: 0, panY: 0, scale: 1 };
+            recordTransform = { x: null, y: null, scale: 1 };
             window.draw();
         };
 
@@ -827,7 +836,8 @@
                     runnerUps: JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS)),
                     swLogoTransform: { x: null, y: null, scale: 1 },
                     sponsorTransform: { x: null, y: null, scale: 1 },
-                    photoTransform: { panX: 0, panY: 0, scale: 1 }
+                    photoTransform: { panX: 0, panY: 0, scale: 1 },
+                    recordTransform: { x: null, y: null, scale: 1 }
                 };
             }
 
@@ -843,6 +853,7 @@
             swLogoTransform = s.swLogoTransform || { x: null, y: null, scale: 1 };
             sponsorTransform = s.sponsorTransform || { x: null, y: null, scale: 1 };
             photoTransform = s.photoTransform || { panX: 0, panY: 0, scale: 1 };
+            recordTransform = s.recordTransform || { x: null, y: null, scale: 1 };
 
             document.getElementById('gen-meet').value = s.meetId || '';
             window.updateGenEvents(); 
@@ -866,7 +877,7 @@
         const ctx = canvas.getContext('2d');
 
         // Drag/Pan state
-        let activeDrag = null; // 'sw', 'sponsor', 'photo'
+        let activeDrag = null; // 'sw', 'sponsor', 'photo', 'record'
         let lastMouse = {x: 0, y: 0};
         let initialPinchDistance = null;
 
@@ -893,6 +904,7 @@
         }
 
         function hitTest(pt) {
+            if (hitBoxes.record && pt.x >= hitBoxes.record.x && pt.x <= hitBoxes.record.x + hitBoxes.record.w && pt.y >= hitBoxes.record.y && pt.y <= hitBoxes.record.y + hitBoxes.record.h) return 'record';
             if (hitBoxes.sw && pt.x >= hitBoxes.sw.x && pt.x <= hitBoxes.sw.x + hitBoxes.sw.w && pt.y >= hitBoxes.sw.y && pt.y <= hitBoxes.sw.y + hitBoxes.sw.h) return 'sw';
             if (hitBoxes.sponsor && pt.x >= hitBoxes.sponsor.x && pt.x <= hitBoxes.sponsor.x + hitBoxes.sponsor.w && pt.y >= hitBoxes.sponsor.y && pt.y <= hitBoxes.sponsor.y + hitBoxes.sponsor.h) return 'sponsor';
             if (hitBoxes.photo && pt.x >= hitBoxes.photo.x && pt.x <= hitBoxes.photo.x + hitBoxes.photo.w && pt.y >= hitBoxes.photo.y && pt.y <= hitBoxes.photo.y + hitBoxes.photo.h) return 'photo';
@@ -947,6 +959,11 @@
                 if(sponsorTransform.y === null) sponsorTransform.y = hitBoxes.sponsor.y;
                 sponsorTransform.x += dx;
                 sponsorTransform.y += dy;
+            } else if (activeDrag === 'record') {
+                if(recordTransform.x === null) recordTransform.x = hitBoxes.record.x;
+                if(recordTransform.y === null) recordTransform.y = hitBoxes.record.y;
+                recordTransform.x += dx;
+                recordTransform.y += dy;
             } else if (activeDrag === 'photo') {
                 photoTransform.panX += dx;
                 photoTransform.panY += dy;
@@ -975,6 +992,10 @@
                 e.preventDefault();
                 sponsorTransform.scale = Math.max(0.1, sponsorTransform.scale - e.deltaY * 0.002);
                 window.draw();
+            } else if (hit === 'record') {
+                e.preventDefault();
+                recordTransform.scale = Math.max(0.1, recordTransform.scale - e.deltaY * 0.002);
+                window.draw();
             }
         }
 
@@ -987,6 +1008,7 @@
             const school = schools.find(x=>x.id===document.getElementById('gen-school').value);
             const event = document.getElementById('gen-event').value;
             const athlete = document.getElementById('gen-athlete').value;
+            const tAthletes = document.getElementById('gen-team-athletes').value;
             const mark = document.getElementById('gen-mark').value;
             const record = document.getElementById('gen-record').value;
             
@@ -996,12 +1018,23 @@
 
             const activeRUs = runnerUps.filter(x=>x.schoolId && x.mark);
 
-            const load = src => new Promise(r => { if(!src) r(null); else { const i=new Image(); i.crossOrigin="anonymous"; i.onload=()=>r(i); i.src=src; }});
+            // Load images securely 
+            const load = src => new Promise(r => { 
+                if(!src) r(null); 
+                else { 
+                    const i=new Image(); 
+                    if(src.startsWith('http')) i.crossOrigin="anonymous"; 
+                    i.onload=()=>r(i); 
+                    i.onerror=()=>r(null); 
+                    i.src=src; 
+                }
+            });
+
             const [pImg, sLogo, spLogo, swLogoImg] = await Promise.all([load(gPhoto), load(school?.logo), load(gSponsor), load(gSwLogo)]);
             const ruData = await Promise.all(activeRUs.map(async x=>({...x, logo: await load(schools.find(s=>s.id===x.schoolId)?.logo)})));
 
             ctx.clearRect(0,0,w,h);
-            hitBoxes = { sw: null, sponsor: null, photo: null };
+            hitBoxes = { sw: null, sponsor: null, photo: null, record: null };
             
             // Helper to draw photo smartly contained and handle panning/zooming
             const drawSmartPhoto = (img, x, y, boxW, boxH) => {
@@ -1037,7 +1070,7 @@
                 let finalH = lH * swLogoTransform.scale;
                 
                 let startX = defX;
-                if (alignCenter) startX = (w/2) - (lW/2);
+                if (alignCenter) startX = (w/2) - (finalW/2);
                 
                 let finalX = swLogoTransform.x !== null ? swLogoTransform.x : startX;
                 let finalY = swLogoTransform.y !== null ? swLogoTransform.y : defY;
@@ -1065,6 +1098,45 @@
                 hitBoxes.sponsor = { x: finalX, y: finalY, w: finalW, h: finalH };
             };
 
+            // Helper to draw draggable Record badge
+            const renderRecordBadge = () => {
+                if (record === 'None') return;
+                
+                const rText = record.toUpperCase();
+                ctx.font = 'bold 32px sans-serif';
+                const tW = ctx.measureText(rText).width;
+                const bW = Math.max(320, tW + 60);
+                const bH = 65;
+                
+                const rScale = recordTransform.scale;
+                const finalW = bW * rScale;
+                const finalH = bH * rScale;
+                
+                // Default coordinates (top left)
+                const defX = 40;
+                const defY = gStyle === 'poster' ? 40 : 180;
+                
+                const finalX = recordTransform.x !== null ? recordTransform.x : defX;
+                const finalY = recordTransform.y !== null ? recordTransform.y : defY;
+                
+                ctx.save();
+                ctx.translate(finalX, finalY);
+                ctx.scale(rScale, rScale);
+                
+                ctx.fillStyle = '#ef4444'; 
+                ctx.beginPath(); 
+                ctx.roundRect(0, 0, bW, bH, 12); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff'; 
+                ctx.textAlign = 'center'; 
+                ctx.fillText(rText, bW/2, 42);
+                
+                ctx.restore();
+                
+                hitBoxes.record = { x: finalX, y: finalY, w: finalW, h: finalH };
+            };
+
             if (gStyle === 'classic') {
                 const grad = ctx.createLinearGradient(0,0,0,h);
                 grad.addColorStop(0, sColor2); 
@@ -1074,6 +1146,7 @@
                 
                 if(sLogo){ ctx.globalAlpha=0.15; ctx.drawImage(sLogo,300,300,900,900); ctx.globalAlpha=1.0; }
                 
+                // SportzWire Banner overlay
                 ctx.fillStyle=hexToRgba(sColor2, 0.6); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
                 
                 if (swLogoImg) {
@@ -1113,8 +1186,14 @@
                     ruData.forEach((ru, i) => {
                         let rx=120;
                         if(ru.logo){ ctx.drawImage(ru.logo,rx,y-36,50,50); rx+=75; }
+                        
+                        let sName = schools.find(s=>s.id===ru.schoolId)?.name || '';
+                        let displayStr = sName.toUpperCase();
+                        if (ru.athletes) displayStr += ` (${ru.athletes.toUpperCase()})`;
+                        
                         ctx.fillStyle=i===0?'#e2e8f0':i===1?'#fba928':'#9ca3af';
-                        ctx.font='bold 32px sans-serif'; ctx.textAlign='left'; ctx.fillText(`${ru.place}: ${schools.find(s=>s.id===ru.schoolId)?.name || ''}`,rx,y, 500);
+                        ctx.font='bold 32px sans-serif'; ctx.textAlign='left'; 
+                        ctx.fillText(`${ru.place}: ${displayStr}`,rx,y, 500);
                         ctx.fillStyle='#facc15'; ctx.textAlign='right'; ctx.fillText(ru.mark,960,y, 200); y+=70;
                     });
                 }
@@ -1162,7 +1241,12 @@
                     ruData.forEach(ru => {
                         let rx = 180;
                         if(ru.logo){ ctx.drawImage(ru.logo, rx, y-34, 44, 44); rx+=60; }
-                        ctx.fillStyle='#94a3b8'; ctx.font='bold 32px sans-serif'; ctx.fillText(`${ru.place}: ${schools.find(s=>s.id===ru.schoolId)?.name || ''}`, rx, y, 450);
+                        
+                        let sName = schools.find(s=>s.id===ru.schoolId)?.name || '';
+                        let displayStr = sName.toUpperCase();
+                        if (ru.athletes) displayStr += ` (${ru.athletes.toUpperCase()})`;
+                        
+                        ctx.fillStyle='#94a3b8'; ctx.font='bold 32px sans-serif'; ctx.fillText(`${ru.place}: ${displayStr}`, rx, y, 450);
                         ctx.fillStyle='#fff'; ctx.textAlign='right'; ctx.fillText(ru.mark, 900, y, 200);
                         ctx.textAlign='left'; y+=50;
                     });
@@ -1212,7 +1296,9 @@
                 ctx.fillText(`${meetText}  •  ${evtText}`.toUpperCase(), w / 2, splitY + 220, 960);
 
                 let startY = splitY + 260;
-                const validItems = [{ place: '1st', schoolId: school?.id, mark: mark, logo: sLogo }].concat(ruData).filter(item => item.schoolId || item.mark || (item.place === '1st' && athlete));
+                
+                const displayAthlete = gType === 'team' ? tAthletes : athlete;
+                const validItems = [{ place: '1st', schoolId: school?.id, mark: mark, logo: sLogo, athletes: displayAthlete }].concat(ruData).filter(item => item.schoolId || item.mark || (item.place === '1st' && athlete));
                 
                 if (validItems.length > 0) {
                     const itemHeight = 45; const boxHeight = validItems.length * itemHeight + 20;
@@ -1220,25 +1306,26 @@
 
                     let ry = startY + 35;
                     validItems.forEach((item, idx) => {
-                        const sName = item.schoolId ? schools.find(s => s.id === item.schoolId)?.name : (idx === 0 ? athlete : '');
+                        let sName = item.schoolId ? schools.find(s => s.id === item.schoolId)?.name : (idx === 0 ? athlete : '');
+                        let displayStr = sName ? sName.toUpperCase() : '';
+                        if (item.athletes) {
+                            displayStr += ` (${item.athletes.toUpperCase()})`;
+                        }
+
                         ctx.fillStyle = idx === 0 ? '#facc15' : '#cbd5e1'; ctx.font = '900 22px sans-serif'; ctx.textAlign = 'left';
                         ctx.fillText(item.place || '', 110, ry);
 
                         let lx = 170;
                         if (item.logo) { ctx.drawImage(item.logo, lx, ry - 26, 32, 32); lx += 45; }
 
-                        ctx.fillStyle = '#ffffff'; ctx.fillText(sName ? sName.toUpperCase() : '', lx, ry, 450);
+                        ctx.fillStyle = '#ffffff'; ctx.fillText(displayStr, lx, ry, 450);
                         if (item.mark) { ctx.fillStyle = idx === 0 ? '#facc15' : '#ffffff'; ctx.textAlign = 'right'; ctx.fillText(item.mark, w - 110, ry, 200); }
                         ry += itemHeight;
                     });
                 }
             }
 
-            if (record !== 'None') {
-                ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.roundRect(40, 140, 320, 65, 12); ctx.fill();
-                ctx.fillStyle='#fff'; ctx.font='bold 32px sans-serif'; ctx.textAlign='center'; ctx.fillText(record.toUpperCase(),200,182);
-            }
-            
+            renderRecordBadge();
             renderSponsorLogo();
             window.updateCaption();
         };
@@ -1311,7 +1398,9 @@
             
             activeRUs.forEach(ru => { 
                 let ruSchool = schools.find(sc=>sc.id===ru.schoolId);
-                c += `${ru.place.replace('nd','').replace('rd','').replace('th','')}. ${ruSchool?.name||'Unknown'} : ${ru.mark}\n`; 
+                let scName = ruSchool?.name||'Unknown';
+                let athStr = ru.athletes ? ` (${ru.athletes})` : '';
+                c += `${ru.place.replace('nd','').replace('rd','').replace('th','')}. ${scName}${athStr} : ${ru.mark}\n`; 
             });
             
             c += `\n#SportzWire #PIAAD2 #TrackAndField #${s?s.name.replace(/\s+/g,''):'Track'}`;
@@ -1319,7 +1408,14 @@
         };
 
         window.generateAndSave = async () => {
-            const u = canvas.toDataURL('image/jpeg', 0.9);
+            let u;
+            try {
+                u = canvas.toDataURL('image/jpeg', 0.9);
+            } catch (err) {
+                window.showError("Save failed due to browser security settings. Please ensure images are uploaded directly from your device.");
+                return;
+            }
+
             const id = editingId ? editingId : Date.now().toString();
             
             const mid = document.getElementById('gen-meet').value, sid = document.getElementById('gen-school').value;
@@ -1338,7 +1434,8 @@
                 runnerUps: JSON.parse(JSON.stringify(runnerUps)),
                 swLogoTransform: JSON.parse(JSON.stringify(swLogoTransform)),
                 sponsorTransform: JSON.parse(JSON.stringify(sponsorTransform)),
-                photoTransform: JSON.parse(JSON.stringify(photoTransform))
+                photoTransform: JSON.parse(JSON.stringify(photoTransform)),
+                recordTransform: JSON.parse(JSON.stringify(recordTransform))
             };
 
             const displayAthlete = gType === 'team' ? genState.teamAthletes : genState.athlete;
@@ -1368,7 +1465,14 @@
 
             window.clearGenerator(); 
 
-            const l = document.createElement('a'); l.download=`sportzwire-${id}.jpg`; l.href=u; l.click();
+            // Hardened download to bypass browser restrictions
+            const l = document.createElement('a'); 
+            l.download=`sportzwire-${id}.jpg`; 
+            l.href=u; 
+            document.body.appendChild(l);
+            l.click();
+            document.body.removeChild(l);
+
             window.showSuccess("Graphic Saved & Logged Successfully! ✅");
         };
 
