@@ -28,220 +28,280 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <!-- App Level Error Banner -->
-    <div id="error-banner" class="hidden fixed top-4 left-4 right-4 z-[100] bg-emerald-600 border border-emerald-500 text-white p-4 rounded-xl shadow-2xl flex items-start justify-between transition-all">
+    <!-- App Level Error/Success Banner -->
+    <div id="error-banner" class="hidden fixed top-4 left-4 right-4 z-[300] bg-emerald-600 border border-emerald-500 text-white p-4 rounded-xl shadow-2xl flex items-start justify-between transition-all">
         <div class="flex gap-3 items-center">
-            <i data-lucide="check-circle"></i>
+            <i data-lucide="check-circle" id="banner-icon"></i>
             <span id="error-message" class="font-bold text-sm leading-tight"></span>
         </div>
         <button onclick="window.hideError()" class="text-white hover:text-emerald-200"><i data-lucide="x"></i></button>
     </div>
 
-    <!-- Sidebar (Desktop) -->
-    <aside class="hidden md:flex fixed left-0 top-0 bottom-0 w-64 bg-slate-900 border-r border-slate-800 flex-col z-50 shadow-2xl">
-        <div class="p-6 border-b border-slate-800 flex items-center gap-2">
-            <i data-lucide="trophy" class="text-yellow-400"></i>
-            <h1 class="text-xl font-black tracking-tighter uppercase italic">SportzWire</h1>
+    <!-- LOGIN SCREEN OVERLAY -->
+    <div id="login-container" class="fixed inset-0 bg-slate-950 z-[200] flex items-center justify-center p-4">
+        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-sm space-y-8">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
+                    <i data-lucide="lock" class="text-sky-400" size="28"></i>
+                </div>
+                <h1 class="text-3xl font-black tracking-tighter uppercase italic text-white">SportzWire</h1>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Admin Portal</p>
+            </div>
+            <div class="space-y-4">
+                <input id="login-passcode" type="password" placeholder="Enter Passcode" onkeydown="if(event.key === 'Enter') window.handleLogin()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-4 text-center font-bold tracking-widest focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-white placeholder:text-slate-600">
+                <button onclick="window.handleLogin()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg shadow-sky-900/20">Access Editor</button>
+            </div>
+            <p id="login-error" class="text-red-500 text-xs font-bold text-center uppercase tracking-wider hidden">Incorrect Passcode</p>
         </div>
-        <nav class="flex-1 p-4 space-y-2">
-            <button onclick="window.switchTab('meets')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-active" data-tab="meets">
-                <i data-lucide="map-pin" size="20"></i> Manage Meets
-            </button>
-            <button onclick="window.switchTab('generator')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="generator">
-                <i data-lucide="camera" size="20"></i> Graphic Gen
-            </button>
-            <button onclick="window.switchTab('results')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="results">
-                <i data-lucide="clipboard-list" size="20"></i> Ledger
-            </button>
-            <button onclick="window.switchTab('history')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="history">
-                <i data-lucide="history" size="20"></i> History
-            </button>
-            <button onclick="window.switchTab('schools')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="schools">
-                <i data-lucide="school" size="20"></i> School Admin
-            </button>
-        </nav>
-    </aside>
-
-    <!-- Mobile Header -->
-    <header class="md:hidden bg-slate-900 p-4 shadow-md sticky top-0 z-40 border-b border-slate-800 flex items-center justify-center gap-2">
-        <i data-lucide="trophy" class="text-yellow-400"></i>
-        <h1 class="text-2xl font-black tracking-tighter uppercase italic">SportzWire</h1>
-    </header>
-
-    <!-- Main Content Area -->
-    <div class="md:pl-64">
-        <main class="max-w-2xl mx-auto p-4 space-y-6 pb-24 md:pb-8">
-
-            <!-- TAB: MEETS -->
-            <section id="tab-meets" class="tab-content active animate-in fade-in">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
-                    <h2 class="text-xl font-bold flex items-center gap-2 text-sky-400"><i data-lucide="map-pin"></i> Manage Meets</h2>
-                    <input id="meet-name" type="text" placeholder="Meet Name (e.g. Jordan Relays)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input id="meet-date" type="date" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 text-slate-400">
-                        <input id="meet-loc" type="text" placeholder="Location" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500">
-                    </div>
-                    <button onclick="window.addMeet()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2">
-                        <i data-lucide="plus"></i> Add Meet
-                    </button>
-                </div>
-                <div id="meets-list" class="mt-6 space-y-4"></div>
-            </section>
-
-            <!-- TAB: GENERATOR -->
-            <section id="tab-generator" class="tab-content animate-in fade-in space-y-6">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
-                    <h2 class="text-xl font-bold flex items-center gap-2 border-b border-slate-800 pb-3 text-purple-400"><i data-lucide="camera"></i> Create Graphic</h2>
-                    
-                    <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800 flex-wrap gap-1 md:gap-0">
-                        <button onclick="window.setStyle('classic')" id="style-classic" class="flex-1 py-2 rounded-lg font-bold text-xs md:text-sm transition-all bg-sky-600 text-white shadow-lg">1: Classic</button>
-                        <button onclick="window.setStyle('splash')" id="style-splash" class="flex-1 py-2 rounded-lg font-bold text-xs md:text-sm transition-all text-slate-500">2: Track Surface</button>
-                        <button onclick="window.setStyle('poster')" id="style-poster" class="flex-1 py-2 rounded-lg font-bold text-xs md:text-sm transition-all text-slate-500">3: Champions</button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase font-black text-slate-500 ml-1">Meet</label>
-                            <select id="gen-meet" onchange="window.updateGenEvents()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 focus:outline-none focus:border-sky-500"></select>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase font-black text-slate-500 ml-1">Event</label>
-                            <select id="gen-event" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 focus:outline-none focus:border-sky-500"></select>
-                        </div>
-                    </div>
-
-                    <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800">
-                        <button onclick="window.setEventType('individual')" id="type-ind" class="flex-1 py-2 rounded-lg font-bold text-sm bg-purple-600 text-white shadow-lg">Individual</button>
-                        <button onclick="window.setEventType('team')" id="type-team" class="flex-1 py-2 rounded-lg font-bold text-sm text-slate-500">Relay/Team</button>
-                    </div>
-
-                    <div class="space-y-3">
-                        <input id="gen-athlete" type="text" placeholder="Athlete Name" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold">
-                        <select id="gen-school" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500"></select>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <input id="gen-mark" type="text" placeholder="Time / Mark" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-black text-yellow-400">
-                        <select id="gen-record" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 focus:outline-none">
-                            <option value="None">No Record</option>
-                            <option value="Meet Record">Meet Record</option>
-                            <option value="School Record">School Record</option>
-                            <option value="State Record">State Record</option>
-                        </select>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-800">
-                        <h3 class="text-xs font-black text-slate-500 uppercase mb-3">Runner Ups (Optional)</h3>
-                        <div id="runner-ups-container" class="space-y-2"></div>
-                    </div>
-
-                    <label class="block w-full bg-slate-950 border-2 border-dashed border-slate-700 rounded-2xl p-8 text-center cursor-pointer hover:border-sky-500 transition-all">
-                        <i data-lucide="camera" class="mx-auto mb-2 text-sky-500" size="32"></i>
-                        <span id="photo-status" class="block font-bold text-white">Upload Podium / Team Photo</span>
-                        <input type="file" accept="image/*" class="hidden" onchange="window.processPodiumPhoto(this)">
-                    </label>
-
-                    <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="briefcase" class="text-sky-400"></i>
-                            <span class="text-sm font-bold text-white">Sponsor Logo</span>
-                        </div>
-                        <input type="file" accept="image/*" class="hidden" onchange="window.processSponsorPhoto(this)">
-                        <span id="sponsor-status" class="text-xs bg-slate-800 px-2 py-1 rounded">None</span>
-                    </label>
-                </div>
-
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
-                    <h3 class="text-xs font-black text-slate-500 uppercase">Live Preview</h3>
-                    <div class="relative flex justify-center bg-black rounded-lg overflow-hidden border border-slate-800 shadow-2xl">
-                        <canvas id="main-canvas" style="max-height: 600px; object-fit: contain; width: 100%;"></canvas>
-                    </div>
-
-                    <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-black text-sky-400 flex items-center gap-1 uppercase italic tracking-widest">SportzWire Editor Recap</span>
-                            <button onclick="window.copyCaption()" class="text-[10px] bg-sky-600 hover:bg-sky-500 px-3 py-1 rounded font-bold text-white">Copy Text</button>
-                        </div>
-                        <textarea id="gen-caption" class="w-full bg-transparent border-0 text-sm text-slate-300 focus:outline-none min-h-[220px] resize-none" spellcheck="false"></textarea>
-                    </div>
-
-                    <button onclick="window.generateAndSave()" class="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-3">
-                        <i data-lucide="save"></i> Save & Download Graphic
-                    </button>
-                </div>
-            </section>
-
-            <!-- TAB: RESULTS -->
-            <section id="tab-results" class="tab-content animate-in fade-in space-y-6">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex items-center gap-2 text-yellow-400">
-                    <i data-lucide="clipboard-list"></i>
-                    <h2 class="text-xl font-bold text-white">Results Ledger</h2>
-                </div>
-                <div id="results-list" class="space-y-6"></div>
-            </section>
-
-            <!-- TAB: HISTORY -->
-            <section id="tab-history" class="tab-content animate-in fade-in space-y-6">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex items-center gap-2 text-indigo-400">
-                    <i data-lucide="history"></i>
-                    <h2 class="text-xl font-bold text-white">Graphic History</h2>
-                </div>
-                <div id="history-grid" class="grid grid-cols-1 gap-4"></div>
-            </section>
-
-            <!-- TAB: SCHOOLS -->
-            <section id="tab-schools" class="tab-content animate-in fade-in space-y-6">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
-                    <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-400"><i data-lucide="school"></i> Manage Schools</h2>
-                    <div class="space-y-3">
-                        <input id="new-school-name" type="text" placeholder="School Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none">
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1">
-                                <i data-lucide="palette" class="text-slate-500" size="18"></i>
-                                <span class="text-sm text-slate-400">Color</span>
-                                <input id="new-school-color" type="color" value="#0ea5e9" class="ml-auto w-8 h-8 rounded bg-transparent border-0 p-0">
-                            </div>
-                        </div>
-                        <button onclick="window.addNewSchool()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
-                            <i data-lucide="plus"></i> Add School
-                        </button>
-                    </div>
-                    <div class="pt-4 border-t border-slate-800">
-                        <label class="block w-full bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-800 transition-all">
-                            <i data-lucide="image" class="mx-auto text-emerald-400 mb-1"></i>
-                            <span class="text-sm font-bold block text-slate-200">Bulk Folder Upload</span>
-                            <span class="text-[10px] text-slate-500 block mt-1">Match logos to school names automatically</span>
-                            <input type="file" multiple webkitdirectory="true" class="hidden" onchange="window.handleBulkLogos(this)">
-                        </label>
-                    </div>
-                </div>
-                <div id="schools-list" class="space-y-3"></div>
-            </section>
-
-        </main>
     </div>
 
-    <!-- Navigation (Mobile Only) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-around items-end z-50 pb-safe shadow-2xl">
-        <button onclick="window.switchTab('meets')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-active" data-tab="meets">
-            <i data-lucide="map-pin" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Meets</span>
-        </button>
-        <button onclick="window.switchTab('generator')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="generator">
-            <i data-lucide="camera" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Gen</span>
-        </button>
-        <button onclick="window.switchTab('results')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="results">
-            <i data-lucide="clipboard-list" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Ledger</span>
-        </button>
-        <button onclick="window.switchTab('history')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="history">
-            <i data-lucide="history" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Hist</span>
-        </button>
-        <button onclick="window.switchTab('schools')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="schools">
-            <i data-lucide="school" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Schools</span>
-        </button>
-    </nav>
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-container" class="hidden">
+        
+        <!-- Sidebar (Desktop) -->
+        <aside class="hidden md:flex fixed left-0 top-0 bottom-0 w-64 bg-slate-900 border-r border-slate-800 flex-col z-50 shadow-2xl">
+            <div class="p-6 border-b border-slate-800 flex items-center gap-2">
+                <i data-lucide="trophy" class="text-yellow-400"></i>
+                <h1 class="text-xl font-black tracking-tighter uppercase italic">SportzWire</h1>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="window.switchTab('meets')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-active" data-tab="meets">
+                    <i data-lucide="map-pin" size="20"></i> Manage Meets
+                </button>
+                <button onclick="window.switchTab('generator')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="generator">
+                    <i data-lucide="camera" size="20"></i> Graphic Gen
+                </button>
+                <button onclick="window.switchTab('results')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="results">
+                    <i data-lucide="clipboard-list" size="20"></i> Ledger
+                </button>
+                <button onclick="window.switchTab('history')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="history">
+                    <i data-lucide="history" size="20"></i> History
+                </button>
+                <button onclick="window.switchTab('schools')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="schools">
+                    <i data-lucide="school" size="20"></i> School Admin
+                </button>
+            </nav>
+            <div class="p-4 border-t border-slate-800 text-center space-y-3">
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v2.5</span>
+                <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
+            </div>
+        </aside>
 
-    <!-- Application Script (No Build Step Required) -->
+        <!-- Mobile Header -->
+        <header class="md:hidden bg-slate-900 p-4 shadow-md sticky top-0 z-40 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i data-lucide="trophy" class="text-yellow-400"></i>
+                <h1 class="text-xl font-black tracking-tighter uppercase italic">SportzWire</h1>
+            </div>
+            <button onclick="window.handleLogout()" class="text-slate-500 hover:text-red-400 p-2"><i data-lucide="log-out" size="20"></i></button>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="md:pl-64">
+            <main class="max-w-2xl mx-auto p-4 space-y-6 pb-24 md:pb-8">
+
+                <!-- TAB: MEETS -->
+                <section id="tab-meets" class="tab-content active animate-in fade-in">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-sky-400"><i data-lucide="map-pin"></i> Manage Meets</h2>
+                        <input id="meet-name" type="text" placeholder="Meet Name (e.g. Jordan Relays)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input id="meet-date" type="date" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 text-slate-400">
+                            <input id="meet-loc" type="text" placeholder="Location" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500">
+                        </div>
+                        <button onclick="window.addMeet()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2">
+                            <i data-lucide="plus"></i> Add Meet
+                        </button>
+                    </div>
+                    <div id="meets-list" class="mt-6 space-y-4"></div>
+                </section>
+
+                <!-- TAB: GENERATOR -->
+                <section id="tab-generator" class="tab-content animate-in fade-in space-y-6">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+                        <h2 class="text-xl font-bold flex items-center gap-2 border-b border-slate-800 pb-3 text-purple-400"><i data-lucide="camera"></i> Create Graphic</h2>
+                        
+                        <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800 flex-wrap gap-1 md:gap-0">
+                            <button onclick="window.setStyle('classic')" id="style-classic" class="flex-1 py-2 rounded-lg font-bold text-xs md:text-sm transition-all bg-sky-600 text-white shadow-lg">1: Classic</button>
+                            <button onclick="window.setStyle('splash')" id="style-splash" class="flex-1 py-2 rounded-lg font-bold text-xs md:text-sm transition-all text-slate-500">2: Track Surface</button>
+                            <button onclick="window.setStyle('poster')" id="style-poster" class="flex-1 py-2 rounded-lg font-bold text-xs md:text-sm transition-all text-slate-500">3: Champions</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] uppercase font-black text-slate-500 ml-1">Meet</label>
+                                <select id="gen-meet" onchange="window.updateGenEvents()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 focus:outline-none focus:border-sky-500"></select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] uppercase font-black text-slate-500 ml-1">Event</label>
+                                <select id="gen-event" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 focus:outline-none focus:border-sky-500"></select>
+                            </div>
+                        </div>
+
+                        <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800">
+                            <button onclick="window.setEventType('individual')" id="type-ind" class="flex-1 py-2 rounded-lg font-bold text-sm bg-purple-600 text-white shadow-lg">Individual</button>
+                            <button onclick="window.setEventType('team')" id="type-team" class="flex-1 py-2 rounded-lg font-bold text-sm text-slate-500">Relay/Team</button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <input id="gen-athlete" type="text" placeholder="Athlete Name" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold">
+                            <select id="gen-school" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500"></select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <input id="gen-mark" type="text" placeholder="Time / Mark" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-black text-yellow-400">
+                            <select id="gen-record" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 focus:outline-none">
+                                <option value="None">No Record</option>
+                                <option value="Meet Record">Meet Record</option>
+                                <option value="School Record">School Record</option>
+                                <option value="State Record">State Record</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800">
+                            <h3 class="text-xs font-black text-slate-500 uppercase mb-3">Runner Ups (Optional)</h3>
+                            <div id="runner-ups-container" class="space-y-2"></div>
+                        </div>
+
+                        <label class="block w-full bg-slate-950 border-2 border-dashed border-slate-700 rounded-2xl p-8 text-center cursor-pointer hover:border-sky-500 transition-all">
+                            <i data-lucide="camera" class="mx-auto mb-2 text-sky-500" size="32"></i>
+                            <span id="photo-status" class="block font-bold text-white">Upload Podium / Team Photo</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.processPodiumPhoto(this)">
+                        </label>
+
+                        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="briefcase" class="text-sky-400"></i>
+                                <span class="text-sm font-bold text-white">Sponsor Logo</span>
+                            </div>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.processSponsorPhoto(this)">
+                            <span id="sponsor-status" class="text-xs bg-slate-800 px-2 py-1 rounded">None</span>
+                        </label>
+                    </div>
+
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                        <h3 class="text-xs font-black text-slate-500 uppercase">Live Preview</h3>
+                        <div class="relative flex justify-center bg-black rounded-lg overflow-hidden border border-slate-800 shadow-2xl">
+                            <canvas id="main-canvas" style="max-height: 600px; object-fit: contain; width: 100%;"></canvas>
+                        </div>
+
+                        <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-black text-sky-400 flex items-center gap-1 uppercase italic tracking-widest">SportzWire Editor Recap</span>
+                                <button onclick="window.copyCaption()" class="text-[10px] bg-sky-600 hover:bg-sky-500 px-3 py-1 rounded font-bold text-white">Copy Text</button>
+                            </div>
+                            <textarea id="gen-caption" class="w-full bg-transparent border-0 text-sm text-slate-300 focus:outline-none min-h-[220px] resize-none" spellcheck="false"></textarea>
+                        </div>
+
+                        <button onclick="window.generateAndSave()" class="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-3">
+                            <i data-lucide="save"></i> Save & Download Graphic
+                        </button>
+                    </div>
+                </section>
+
+                <!-- TAB: RESULTS -->
+                <section id="tab-results" class="tab-content animate-in fade-in space-y-6">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex items-center gap-2 text-yellow-400">
+                        <i data-lucide="clipboard-list"></i>
+                        <h2 class="text-xl font-bold text-white">Results Ledger</h2>
+                    </div>
+                    <div id="results-list" class="space-y-6"></div>
+                </section>
+
+                <!-- TAB: HISTORY -->
+                <section id="tab-history" class="tab-content animate-in fade-in space-y-6">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex items-center gap-2 text-indigo-400">
+                        <i data-lucide="history"></i>
+                        <h2 class="text-xl font-bold text-white">Graphic History</h2>
+                    </div>
+                    <div id="history-grid" class="grid grid-cols-1 gap-4"></div>
+                </section>
+
+                <!-- TAB: SCHOOLS -->
+                <section id="tab-schools" class="tab-content animate-in fade-in space-y-6">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-400"><i data-lucide="school"></i> Manage Schools</h2>
+                        <div class="space-y-3">
+                            <input id="new-school-name" type="text" placeholder="School Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1">
+                                    <i data-lucide="palette" class="text-slate-500" size="18"></i>
+                                    <span class="text-sm text-slate-400">Color</span>
+                                    <input id="new-school-color" type="color" value="#0ea5e9" class="ml-auto w-8 h-8 rounded bg-transparent border-0 p-0">
+                                </div>
+                            </div>
+                            <button onclick="window.addNewSchool()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                                <i data-lucide="plus"></i> Add School
+                            </button>
+                        </div>
+                        <div class="pt-4 border-t border-slate-800">
+                            <label class="block w-full bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-800 transition-all">
+                                <i data-lucide="image" class="mx-auto text-emerald-400 mb-1"></i>
+                                <span class="text-sm font-bold block text-slate-200">Bulk Folder Upload</span>
+                                <span class="text-[10px] text-slate-500 block mt-1">Match logos to school names automatically</span>
+                                <input type="file" multiple webkitdirectory="true" class="hidden" onchange="window.handleBulkLogos(this)">
+                            </label>
+                        </div>
+                    </div>
+                    <div id="schools-list" class="space-y-3"></div>
+                </section>
+
+            </main>
+        </div>
+
+        <!-- Navigation (Mobile Only) -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-around items-end z-50 pb-safe shadow-2xl">
+            <button onclick="window.switchTab('meets')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-active" data-tab="meets">
+                <i data-lucide="map-pin" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Meets</span>
+            </button>
+            <button onclick="window.switchTab('generator')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="generator">
+                <i data-lucide="camera" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Gen</span>
+            </button>
+            <button onclick="window.switchTab('results')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="results">
+                <i data-lucide="clipboard-list" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Ledger</span>
+            </button>
+            <button onclick="window.switchTab('history')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="history">
+                <i data-lucide="history" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Hist</span>
+            </button>
+            <button onclick="window.switchTab('schools')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="schools">
+                <i data-lucide="school" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Schools</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Application Script (NO FIREBASE REQUIRED) -->
     <script>
+        // --- Authentication Logic ---
+        const APP_PASSCODE = "sportzwire26";
+
+        window.checkAuth = () => {
+            if (localStorage.getItem('sw_auth') === 'true') {
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                startSync(); 
+            } else {
+                document.getElementById('login-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
+        };
+
+        window.handleLogin = () => {
+            const input = document.getElementById('login-passcode').value;
+            if (input === APP_PASSCODE) {
+                localStorage.setItem('sw_auth', 'true');
+                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('login-passcode').value = '';
+                window.checkAuth();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        };
+
+        window.handleLogout = () => {
+            localStorage.removeItem('sw_auth');
+            window.checkAuth();
+        };
+
         // --- Constants & Default Data ---
         const EVENTS = [
             '100m Dash', '200m Dash', '400m Dash', '800m Run', '1600m Run', '3200m Run',
@@ -308,6 +368,17 @@
             localStorage.setItem('sw_history', JSON.stringify(history));
         }
 
+        function startSync() {
+            renderMeets(); 
+            renderSchools(); 
+            renderResults(); 
+            renderHistory();
+            window.updateSelects(); 
+            window.updateStyleUI(); 
+            window.updateTypeUI();
+            if(window.lucide) window.lucide.createIcons();
+        }
+
         // --- Global Methods ---
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -320,10 +391,26 @@
 
         window.showSuccess = (m) => { 
             const banner = document.getElementById('error-banner');
+            const icon = document.getElementById('banner-icon');
+            icon.setAttribute('data-lucide', 'check-circle');
             document.getElementById('error-message').innerText = m; 
-            banner.classList.remove('hidden'); 
+            banner.classList.remove('hidden', 'bg-red-600', 'border-red-500'); 
+            banner.classList.add('bg-emerald-600', 'border-emerald-500');
+            if(window.lucide) window.lucide.createIcons();
             setTimeout(() => window.hideError(), 4000);
         };
+
+        window.showError = (m) => { 
+            const banner = document.getElementById('error-banner');
+            const icon = document.getElementById('banner-icon');
+            icon.setAttribute('data-lucide', 'alert-circle');
+            document.getElementById('error-message').innerText = m; 
+            banner.classList.remove('hidden', 'bg-emerald-600', 'border-emerald-500'); 
+            banner.classList.add('bg-red-600', 'border-red-500');
+            if(window.lucide) window.lucide.createIcons();
+            setTimeout(() => window.hideError(), 4000);
+        };
+
         window.hideError = () => document.getElementById('error-banner').classList.add('hidden');
 
         async function compress(file, max, isLogo=false) {
@@ -524,8 +611,7 @@
         window.processPodiumPhoto = async (i) => { gPhoto = await compress(i.files[0], 1080); document.getElementById('photo-status').innerText="Ready ✅"; window.draw(); };
         window.processSponsorPhoto = async (i) => { gSponsor = await compress(i.files[0], 500, true); document.getElementById('sponsor-status').innerText="✅"; window.draw(); };
 
-        const canvas = document.getElementById('main-canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('main-canvas'), ctx = canvas.getContext('2d');
 
         window.draw = async () => {
             const w = 1080;
@@ -777,23 +863,11 @@
             if(window.lucide) window.lucide.createIcons();
         }
 
-        window.copyCaption = () => { 
-            const t=document.getElementById('gen-caption'); 
-            t.select(); document.execCommand('copy'); 
-            window.showSuccess("Caption copied to clipboard! ✅");
-        };
-
-        // --- Init ---
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderMeets();
-            renderSchools();
-            renderResults();
-            renderHistory();
-            window.updateStyleUI(); 
-            window.updateTypeUI(); 
-            window.updateSelects();
-            if(window.lucide) window.lucide.createIcons();
+            window.checkAuth();
         });
+
     </script>
 </body>
 </html>
