@@ -84,7 +84,7 @@
                 </button>
             </nav>
             <div class="p-4 border-t border-slate-800 text-center space-y-3">
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v4.5</span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Cloud v5.0</span>
                 <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
             </div>
         </aside>
@@ -322,16 +322,53 @@
         </nav>
     </div>
 
-    <!-- Application Script (Local Storage) -->
-    <script>
+    <!-- Application Script (Cloud Firebase) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // =========================================================================
+        // 🔴 IMPORTANT: IF DEPLOYING TO NETLIFY, PASTE YOUR FIREBASE CONFIG HERE 🔴
+        // =========================================================================
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyCC5oLGOYMHtzQP1Tbd1zDzCnoFc16g8XQ",
+            authDomain: "track-field-791b0.firebaseapp.com",
+            databaseURL: "https://track-field-791b0-default-rtdb.firebaseio.com",
+            projectId: "track-field-791b0",
+            storageBucket: "track-field-791b0.firebasestorage.app",
+            messagingSenderId: "817423800874",
+            appId: "1:817423800874:web:373af583fa2e7928714153",
+            measurementId: "G-R24BSCNSLM"
+        };
+        // =========================================================================
+
+        const fbConfig = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : myFirebaseConfig;
+        const fbApp = initializeApp(fbConfig);
+        const auth = getAuth(fbApp);
+        const db = getFirestore(fbApp);
+
+        // Define strict collection paths to ensure cross-device visibility
+        const artifactAppId = "sportzwire-track-app-v4";
+        const meetsRef = collection(db, 'artifacts', artifactAppId, 'public', 'data', 'meets');
+        const schoolsRef = collection(db, 'artifacts', artifactAppId, 'public', 'data', 'schools');
+        const resultsRef = collection(db, 'artifacts', artifactAppId, 'public', 'data', 'results');
+        const historyRef = collection(db, 'artifacts', artifactAppId, 'public', 'data', 'history');
+        const settingsRef = collection(db, 'artifacts', artifactAppId, 'public', 'data', 'settings');
+
         // --- Authentication Logic ---
         const APP_PASSCODE = "sportzwire26";
 
-        window.checkAuth = () => {
+        window.checkAuth = async () => {
             if (localStorage.getItem('sw_auth') === 'true') {
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
-                startSync(); 
+                try {
+                    await signInAnonymously(auth);
+                    startSync();
+                } catch (e) {
+                    window.showError("Firebase Database Error: Please make sure you pasted your Firebase Config keys in the code!");
+                }
             } else {
                 document.getElementById('login-container').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('hidden');
@@ -408,18 +445,15 @@
         ];
 
         // --- State Variables ---
-        let meets = JSON.parse(localStorage.getItem('sw_meets')) || [];
-        let schools = JSON.parse(localStorage.getItem('sw_schools')) || DEFAULT_SCHOOLS;
-        
-        schools.forEach(s => { if (!s.color2) s.color2 = '#020617'; });
-
-        let results = JSON.parse(localStorage.getItem('sw_results')) || [];
-        let history = JSON.parse(localStorage.getItem('sw_history')) || [];
+        let meets = [];
+        let schools = [];
+        let results = [];
+        let history = [];
         
         let editingId = null; 
         let gStyle = 'classic', gType = 'individual', gPhoto = null;
-        let gSponsor = localStorage.getItem('sw_sponsor_logo') || null;
-        let gSwLogo = localStorage.getItem('sw_custom_logo') || null;
+        let gSponsor = null;
+        let gSwLogo = null;
         let runnerUps = JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
 
         // Interaction state for graphic elements
@@ -429,26 +463,44 @@
         let recordTransform = { x: null, y: null, scale: 1 };
         let hitBoxes = { sw: null, sponsor: null, photo: null, record: null };
 
-        // Syncs local variables to localStorage
-        function saveData() {
-            localStorage.setItem('sw_meets', JSON.stringify(meets));
-            localStorage.setItem('sw_schools', JSON.stringify(schools));
-            localStorage.setItem('sw_results', JSON.stringify(results));
-            localStorage.setItem('sw_history', JSON.stringify(history));
-        }
-
-        // Initialize UI components
+        // Realtime Firebase Listeners
         function startSync() {
-            renderMeets(); 
-            renderSchools(); 
-            renderResults(); 
-            renderHistory();
-            window.updateSelects(); 
-            window.updateStyleUI(); 
-            window.updateTypeUI();
+            if (!auth.currentUser) return;
 
-            if (gSwLogo) document.getElementById('sw-logo-status').innerText = 'Loaded ✅';
-            if (gSponsor) document.getElementById('sponsor-status').innerText = 'Loaded ✅';
+            onSnapshot(meetsRef, (snap) => {
+                meets = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderMeets(); window.updateSelects();
+            }, e => console.error(e));
+
+            onSnapshot(schoolsRef, (snap) => {
+                if (snap.empty) {
+                    DEFAULT_SCHOOLS.forEach(s => setDoc(doc(schoolsRef, s.id), s));
+                } else {
+                    schools = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderSchools(); window.updateSelects(); window.draw();
+                }
+            }, e => console.error(e));
+
+            onSnapshot(resultsRef, (snap) => {
+                results = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.timestamp - a.timestamp);
+                renderResults();
+            }, e => console.error(e));
+
+            onSnapshot(historyRef, (snap) => {
+                history = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.data.timestamp - a.data.timestamp);
+                renderHistory();
+            }, e => console.error(e));
+
+            onSnapshot(doc(settingsRef, 'global'), (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    gSwLogo = data.swLogo || null;
+                    gSponsor = data.sponsorLogo || null;
+                    document.getElementById('sw-logo-status').innerText = gSwLogo ? 'Loaded ✅' : 'Upload';
+                    document.getElementById('sponsor-status').innerText = gSponsor ? 'Loaded ✅' : 'Upload';
+                    window.draw();
+                }
+            }, e => console.error(e));
 
             if(window.lucide) window.lucide.createIcons();
             window.draw();
@@ -535,37 +587,31 @@
         };
 
         // --- Meets Logic ---
-        window.addMeet = () => {
+        window.addMeet = async () => {
             const n = document.getElementById('meet-name').value, d = document.getElementById('meet-date').value, l = document.getElementById('meet-loc').value;
             if(!n) return;
-            meets.push({ id: Date.now().toString(), name: n, date: d, location: l, events: [...EVENTS] });
-            saveData();
+            const id = Date.now().toString();
+            await setDoc(doc(meetsRef, id), { name: n, date: d, location: l, events: [...EVENTS] });
             document.getElementById('meet-name').value='';
-            renderMeets(); window.updateSelects();
         };
 
-        window.removeMeet = (id) => {
-            meets = meets.filter(m => m.id !== id);
-            saveData();
-            renderMeets(); window.updateSelects();
+        window.removeMeet = async (id) => {
+            await deleteDoc(doc(meetsRef, id));
         };
 
-        window.handleAddEventToMeet = (meetId, eventName) => {
+        window.handleAddEventToMeet = async (meetId, eventName) => {
             if (!eventName) return;
             const meet = meets.find(m => m.id === meetId);
             if (meet && !meet.events.includes(eventName)) {
-                meet.events.push(eventName);
-                saveData();
-                renderMeets(); window.updateSelects();
+                await setDoc(doc(meetsRef, meetId), { events: [...meet.events, eventName] }, { merge: true });
             }
         };
 
-        window.handleDeleteEventFromMeet = (meetId, eventName) => {
+        window.handleDeleteEventFromMeet = async (meetId, eventName) => {
             const meet = meets.find(m => m.id === meetId);
             if (meet) {
-                meet.events = meet.events.filter(e => e !== eventName);
-                saveData();
-                renderMeets(); window.updateSelects();
+                const updated = meet.events.filter(e => e !== eventName);
+                await setDoc(doc(meetsRef, meetId), { events: updated }, { merge: true });
             }
         };
 
@@ -603,32 +649,27 @@
         }
 
         // --- Schools Logic ---
-        window.addNewSchool = () => {
+        window.addNewSchool = async () => {
             const n = document.getElementById('new-school-name').value;
             const c1 = document.getElementById('new-school-color').value;
             const c2 = document.getElementById('new-school-color2').value;
             if(!n) return;
-            schools.push({ id: Date.now().toString(), name: n, color: c1, color2: c2, logo: null });
-            saveData();
+            const id = Date.now().toString();
+            await setDoc(doc(schoolsRef, id), { name: n, color: c1, color2: c2, logo: null });
             document.getElementById('new-school-name').value='';
-            renderSchools(); window.updateSelects();
         };
 
-        window.removeSchool = (id) => {
-            schools = schools.filter(s => s.id !== id);
-            saveData();
-            renderSchools(); window.updateSelects();
+        window.removeSchool = async (id) => {
+            await deleteDoc(doc(schoolsRef, id));
         }
 
         window.handleLogoUpload = async (id, input) => { 
             const url = await compress(input.files[0], 500, true); 
-            const s = schools.find(x => x.id === id);
-            if (s) { s.logo = url; saveData(); renderSchools(); window.updateSelects(); window.draw(); }
+            await setDoc(doc(schoolsRef, id), { logo: url }, { merge: true }); 
         };
         
-        window.updateSchoolColor = (id, field, v) => { 
-            const s = schools.find(x => x.id === id);
-            if (s) { s[field] = v; saveData(); renderSchools(); window.draw(); }
+        window.updateSchoolColor = async (id, field, v) => { 
+            await setDoc(doc(schoolsRef, id), { [field]: v }, { merge: true }); 
         };
 
         function renderSchools() {
@@ -667,42 +708,29 @@
                 const name = f.name.replace(/\.[^/.]+$/, "").toLowerCase();
                 const s = schools.find(x => x.name.toLowerCase() === name);
                 if (s) {
-                    s.logo = await compress(f, 500, true);
+                    const url = await compress(f, 500, true);
+                    await setDoc(doc(schoolsRef, s.id), { logo: url }, { merge: true });
                     matched++;
                 }
             }
-            if (matched > 0) {
-                saveData();
-                renderSchools(); window.updateSelects(); window.draw();
-                window.showSuccess(`${matched} logos successfully matched and uploaded!`);
-            }
+            if (matched > 0) window.showSuccess(`${matched} logos successfully matched and uploaded!`);
         };
 
         // --- Custom Global Logos ---
         window.processSWLogo = async (i) => { 
-            gSwLogo = await compress(i.files[0], 800, true); 
-            localStorage.setItem('sw_custom_logo', gSwLogo);
-            document.getElementById('sw-logo-status').innerText="Loaded ✅"; 
-            window.draw(); 
+            const url = await compress(i.files[0], 800, true); 
+            await setDoc(doc(settingsRef, 'global'), { swLogo: url }, { merge: true });
         };
-        window.clearSWLogo = () => {
-            gSwLogo = null;
-            localStorage.removeItem('sw_custom_logo');
-            document.getElementById('sw-logo-status').innerText="Upload"; 
-            window.draw(); 
+        window.clearSWLogo = async () => {
+            await setDoc(doc(settingsRef, 'global'), { swLogo: null }, { merge: true });
         };
 
         window.processSponsorPhoto = async (i) => { 
-            gSponsor = await compress(i.files[0], 500, true); 
-            localStorage.setItem('sw_sponsor_logo', gSponsor);
-            document.getElementById('sponsor-status').innerText="Loaded ✅"; 
-            window.draw(); 
+            const url = await compress(i.files[0], 500, true); 
+            await setDoc(doc(settingsRef, 'global'), { sponsorLogo: url }, { merge: true });
         };
-        window.clearSponsor = () => {
-            gSponsor = null;
-            localStorage.removeItem('sw_sponsor_logo');
-            document.getElementById('sponsor-status').innerText="Upload"; 
-            window.draw(); 
+        window.clearSponsor = async () => {
+            await setDoc(doc(settingsRef, 'global'), { sponsorLogo: null }, { merge: true });
         };
 
         // --- Generator Logic ---
@@ -1465,9 +1493,13 @@
                 history.unshift(hData);
             }
             
-            saveData();
-            renderResults();
-            renderHistory();
+            // --- FIREBASE SAVING ---
+            const rRef = doc(resultsRef, id);
+            await setDoc(rRef, rData);
+            
+            const hRef = doc(historyRef, id);
+            await setDoc(hRef, hData);
+            // -----------------------
 
             window.clearGenerator(); 
 
@@ -1480,6 +1512,12 @@
             document.body.removeChild(l);
 
             window.showSuccess("Graphic Saved & Logged Successfully! ✅");
+        };
+
+        window.deleteHistory = async (id) => {
+            await deleteDoc(doc(historyRef, id));
+            // Additionally delete the corresponding result object to keep them in sync
+            await deleteDoc(doc(resultsRef, id));
         };
 
         function renderResults() {
@@ -1520,7 +1558,7 @@
                         <div class="text-[10px] text-slate-500">${h.date}</div>
                     </div>
                     <button onclick="window.loadState('${h.id}', 'history')" class="p-4 text-slate-600 hover:text-sky-400 transition-colors"><i data-lucide="edit" size="18"></i></button>
-                    <button onclick="history.splice(${i}, 1); saveData(); renderHistory();" class="p-4 text-slate-700 hover:text-red-500 transition-colors"><i data-lucide="trash-2" size="18"></i></button>
+                    <button onclick="window.deleteHistory('${h.id}')" class="p-4 text-slate-700 hover:text-red-500 transition-colors"><i data-lucide="trash-2" size="18"></i></button>
                 </div>
             `).join('');
             if(window.lucide) window.lucide.createIcons();
