@@ -51,6 +51,21 @@
         <button onclick="window.hideError()" class="text-white hover:text-emerald-200"><i data-lucide="x"></i></button>
     </div>
 
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-slate-950/80 z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 p-6 rounded-2xl border border-red-500/50 shadow-2xl w-full max-w-sm text-center space-y-4">
+            <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-500">
+                <i data-lucide="alert-triangle" size="24"></i>
+            </div>
+            <h3 class="text-lg font-black text-white uppercase tracking-wider">Delete Result?</h3>
+            <p class="text-sm text-slate-400">Are you sure you want to permanently delete this result from the ledger? This action cannot be undone.</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="window.closeDeleteModal()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors">Cancel</button>
+                <button onclick="window.executeDeleteResult()" class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGIN SCREEN OVERLAY -->
     <div id="login-container" class="fixed inset-0 bg-slate-950 z-[200] flex items-center justify-center p-4">
         <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-sm space-y-8">
@@ -1520,12 +1535,12 @@
                 c += `${a || (s?s.name:'The winner')} ${marginText} to capture first place, posting a mark of ${mk||'TBD'}. `;
             }
             
-            if(rc!=='None') c += `This exceptional effort establishes a new ${rc}!\n\n`;
+            if(rc !== 'None') c += `In a historic moment for the program, this exceptional effort shattered expectations and established a new ${rc}!\n\n`;
             else c += `\n\n`;
             
-            c += `Meet Results:\n`;
+            c += `TOP FINISHERS & STATS:\n`;
             if(s) {
-                c += `1. ${s.name}`;
+                c += `1st Place: ${s.name}`;
                 if (gType === 'individual' && a) c += ` (${a})`;
                 if (gType === 'team' && tAthletes) c += ` (${tAthletes})`;
                 if (mk) c += ` : ${mk}`;
@@ -1536,7 +1551,7 @@
                 let ruSchool = schools.find(sc=>sc.id===ru.schoolId);
                 let scName = ruSchool?.name||'Unknown';
                 let athStr = ru.athletes ? ` (${ru.athletes})` : '';
-                c += `${ru.place.replace('nd','').replace('rd','').replace('th','')}. ${scName}${athStr} : ${ru.mark}\n`; 
+                c += `${ru.place.replace('nd','').replace('rd','').replace('th','')} Place: ${scName}${athStr} : ${ru.mark}\n`; 
             });
             
             c += `\n#SportzWire #PIAAD2 #TrackAndField #${s?s.name.replace(/\s+/g,''):'Track'}`;
@@ -1644,26 +1659,108 @@
             await deleteDoc(doc(resultsRef, id));
         };
 
+        let resultIdToDelete = null;
+
+        window.confirmDeleteResult = (id) => {
+            resultIdToDelete = id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.closeDeleteModal = () => {
+            resultIdToDelete = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        };
+
+        window.executeDeleteResult = async () => {
+            if (!resultIdToDelete) return;
+            try {
+                await deleteDoc(doc(resultsRef, resultIdToDelete));
+                await deleteDoc(doc(historyRef, resultIdToDelete));
+                window.showSuccess("Result deleted successfully. ✅");
+            } catch (e) {
+                window.showError("Failed to delete result.");
+            }
+            window.closeDeleteModal();
+        };
+
+        window.copyMeetArticle = (meetName) => {
+            const meetResults = results.filter(r => r.meetName === meetName);
+            if (meetResults.length === 0) return;
+
+            let article = `SportzWire News | Full Coverage of the ${meetName}\n\n`;
+            article += `It was a spectacular day of competition at the ${meetName}, featuring standout performances and tightly contested finishes across the board. Athletes from across the region gathered to showcase their hard work, resulting in an unforgettable track and field event.\n\n`;
+
+            meetResults.forEach(r => {
+                const isTeam = r.state && r.state.type === 'team';
+                const athleteStr = isTeam ? (r.state.teamAthletes ? `the team of ${r.state.teamAthletes}` : 'the relay squad') : (r.athleteName || 'competitors');
+                
+                article += `In the ${r.eventName}, ${athleteStr} from ${r.schoolName} captured first place with an impressive mark of ${r.mark}. `;
+                
+                if (r.recordType && r.recordType !== 'None') {
+                    article += `In a historic moment for the program, this performance established a brand new ${r.recordType}! `;
+                }
+                article += `\n\n`;
+            });
+
+            article += `TOP FINISHERS & STATS\n`;
+            meetResults.forEach(r => {
+                article += `\nEVENT: ${r.eventName}\n`;
+                article += `1st Place: ${r.schoolName} `;
+                if (r.athleteName) article += `(${r.athleteName}) `;
+                article += `: ${r.mark}\n`;
+
+                if (r.state && r.state.runnerUps) {
+                    const activeRUs = r.state.runnerUps.filter(x => x.schoolId && x.mark);
+                    activeRUs.forEach(ru => {
+                        let ruSchool = schools.find(sc => sc.id === ru.schoolId)?.name || 'Unknown';
+                        let athStr = ru.athletes ? ` (${ru.athletes})` : '';
+                        article += `${ru.place.replace(/[a-z]/gi, '')} Place: ${ruSchool}${athStr} : ${ru.mark}\n`;
+                    });
+                }
+            });
+
+            const ta = document.createElement('textarea');
+            ta.value = article;
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                window.showSuccess(`Full article for ${meetName} copied to clipboard! ✅`);
+            } catch (e) {
+                window.showError("Failed to copy article.");
+            }
+            document.body.removeChild(ta);
+        };
+
         function renderResults() {
             const list = document.getElementById('results-list');
             if(results.length===0){ list.innerHTML='<p class="text-center text-slate-500 py-10 uppercase font-bold">No results logged</p>'; return; }
             const g = results.reduce((acc,c)=>{ if(!acc[c.meetName]) acc[c.meetName]=[]; acc[c.meetName].push(c); return acc; },{});
             list.innerHTML = Object.entries(g).map(([m,rs])=>`
                 <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-lg">
-                    <div class="bg-slate-800 p-3 font-black text-xs uppercase tracking-widest text-sky-400">${m}</div>
+                    <div class="bg-slate-800 p-3 flex justify-between items-center">
+                        <span class="font-black text-xs uppercase tracking-widest text-sky-400">${m}</span>
+                        <button onclick="window.copyMeetArticle('${m.replace(/'/g, "\\'")}')" class="text-[10px] bg-sky-600 hover:bg-sky-500 px-3 py-1 rounded font-bold text-white flex items-center gap-1 transition-colors">
+                            <i data-lucide="file-text" size="12"></i> Copy Article
+                        </button>
+                    </div>
                     <div class="divide-y divide-slate-800">
                         ${rs.map(r=>`
                             <div class="p-4 flex justify-between items-center group">
                                 <div>
                                     <div class="font-bold text-white">${r.eventName}</div>
-                                    <div class="text-xs text-slate-400">${r.athleteName?r.athleteName+' - ':''}${r.schoolName}</div>
+                                    <div class="text-xs text-slate-400">${r.athleteName?r.athleteName+' : ':''}${r.schoolName}</div>
                                 </div>
                                 <div class="text-right flex items-center gap-4">
                                     <div>
                                         <div class="font-black text-yellow-400">${r.mark}</div>
                                         ${r.recordType!=='None'?`<span class="text-[8px] bg-red-600 px-1 rounded font-black">${r.recordType}</span>`:''}
                                     </div>
-                                    <button onclick="window.loadState('${r.id}', 'results')" class="text-slate-500 hover:text-sky-400 p-2"><i data-lucide="edit" size="16"></i></button>
+                                    <div class="flex items-center gap-1">
+                                        <button onclick="window.loadState('${r.id}', 'results')" class="text-slate-500 hover:text-sky-400 p-2 transition-colors"><i data-lucide="edit" size="16"></i></button>
+                                        <button onclick="window.confirmDeleteResult('${r.id}')" class="text-slate-500 hover:text-red-500 p-2 transition-colors"><i data-lucide="trash-2" size="16"></i></button>
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}
