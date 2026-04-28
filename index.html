@@ -19,7 +19,9 @@
             .btn-inactive { border-left: none; border-top: 3px solid transparent; }
         }
         
-        canvas { max-width: 100%; height: auto; border-radius: 0.5rem; display: block; margin: 0 auto; }
+        /* Added touch-action: none to allow smooth dragging/pinching on mobile without scrolling the page */
+        canvas { max-width: 100%; height: auto; border-radius: 0.5rem; display: block; margin: 0 auto; touch-action: none; cursor: grab; }
+        canvas:active { cursor: grabbing; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -82,7 +84,7 @@
                 </button>
             </nav>
             <div class="p-4 border-t border-slate-800 text-center space-y-3">
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v3.0</span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v4.0</span>
                 <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
             </div>
         </aside>
@@ -150,7 +152,8 @@
                         </div>
 
                         <div class="space-y-3">
-                            <input id="gen-athlete" type="text" placeholder="Athlete Name (Optional for Teams)" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold">
+                            <input id="gen-athlete" type="text" placeholder="Athlete Name" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold">
+                            <input id="gen-team-athletes" type="text" placeholder="Winning Relay Members (Optional)" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold" style="display: none;">
                             <select id="gen-school" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500"></select>
                         </div>
 
@@ -177,10 +180,12 @@
                     </div>
 
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
-                        <h3 class="text-xs font-black text-slate-500 uppercase flex justify-between items-center">
-                            Live Preview
-                            <button onclick="window.clearGenerator()" class="text-slate-400 hover:text-white transition-colors">Clear</button>
-                        </h3>
+                        <div class="flex justify-between items-end">
+                            <h3 class="text-xs font-black text-slate-500 uppercase">Interactive Canvas</h3>
+                            <button onclick="window.resetLayout()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded font-bold transition-colors"><i data-lucide="rotate-ccw" class="inline mb-0.5 mr-1" size="10"></i>Reset Layout</button>
+                        </div>
+                        <p class="text-[10px] text-slate-400">Drag to pan photo or move logos. Scroll/pinch to zoom.</p>
+                        
                         <div class="relative flex justify-center bg-black rounded-lg overflow-hidden border border-slate-800 shadow-2xl">
                             <canvas id="main-canvas" style="max-height: 600px; object-fit: contain; width: 100%;"></canvas>
                         </div>
@@ -190,7 +195,7 @@
                                 <span class="text-xs font-black text-sky-400 flex items-center gap-1 uppercase italic tracking-widest">SportzWire Editor Recap</span>
                                 <button onclick="window.copyCaption()" class="text-[10px] bg-sky-600 hover:bg-sky-500 px-3 py-1 rounded font-bold text-white">Copy Text</button>
                             </div>
-                            <textarea id="gen-caption" class="w-full bg-transparent border-0 text-sm text-slate-300 focus:outline-none min-h-[220px] resize-none" spellcheck="false"></textarea>
+                            <textarea id="gen-caption" class="w-full bg-transparent border-0 text-sm text-slate-300 focus:outline-none min-h-[300px] resize-none" spellcheck="false"></textarea>
                         </div>
 
                         <button onclick="window.generateAndSave()" class="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-3">
@@ -265,15 +270,17 @@
                         <div class="space-y-3">
                             <input id="new-school-name" type="text" placeholder="School Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none">
                             <div class="flex flex-col md:flex-row gap-4">
-                                <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1">
+                                <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1 relative">
                                     <i data-lucide="palette" class="text-slate-500" size="18"></i>
                                     <span class="text-sm text-slate-400">Primary Color</span>
-                                    <input id="new-school-color" type="color" value="#0ea5e9" class="ml-auto w-8 h-8 rounded bg-transparent border-0 p-0">
+                                    <button onclick="window.pickColor('new-school-color')" title="Eyedropper Tool" class="ml-auto text-slate-400 hover:text-white mr-2"><i data-lucide="pipette" size="16"></i></button>
+                                    <input id="new-school-color" type="color" value="#0ea5e9" class="w-8 h-8 rounded bg-transparent border-0 p-0 cursor-pointer">
                                 </div>
-                                <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1">
+                                <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1 relative">
                                     <i data-lucide="palette" class="text-slate-500" size="18"></i>
                                     <span class="text-sm text-slate-400">Secondary Color</span>
-                                    <input id="new-school-color2" type="color" value="#ffffff" class="ml-auto w-8 h-8 rounded bg-transparent border-0 p-0">
+                                    <button onclick="window.pickColor('new-school-color2')" title="Eyedropper Tool" class="ml-auto text-slate-400 hover:text-white mr-2"><i data-lucide="pipette" size="16"></i></button>
+                                    <input id="new-school-color2" type="color" value="#ffffff" class="w-8 h-8 rounded bg-transparent border-0 p-0 cursor-pointer">
                                 </div>
                             </div>
                             <button onclick="window.addNewSchool()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
@@ -403,8 +410,6 @@
         // --- State Variables ---
         let meets = JSON.parse(localStorage.getItem('sw_meets')) || [];
         let schools = JSON.parse(localStorage.getItem('sw_schools')) || DEFAULT_SCHOOLS;
-        
-        // Ensure old school formats have color2
         schools.forEach(s => { if (!s.color2) s.color2 = '#020617'; });
 
         let results = JSON.parse(localStorage.getItem('sw_results')) || [];
@@ -414,8 +419,13 @@
         let gStyle = 'classic', gType = 'individual', gPhoto = null;
         let gSponsor = localStorage.getItem('sw_sponsor_logo') || null;
         let gSwLogo = localStorage.getItem('sw_custom_logo') || null;
-
         let runnerUps = JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
+
+        // Interaction state for graphic elements
+        let swLogoTransform = { x: null, y: null, scale: 1 };
+        let sponsorTransform = { x: null, y: null, scale: 1 };
+        let photoTransform = { panX: 0, panY: 0, scale: 1 };
+        let hitBoxes = { sw: null, sponsor: null, photo: null };
 
         // Syncs local variables to localStorage
         function saveData() {
@@ -476,7 +486,6 @@
 
         window.hideError = () => document.getElementById('error-banner').classList.add('hidden');
 
-        // Hex to RGBA helper for blending school colors
         const hexToRgba = (hex, alpha) => {
             if (!hex) return `rgba(0,0,0,${alpha})`;
             let r=0,g=0,b=0;
@@ -504,6 +513,24 @@
                 r.readAsDataURL(file);
             });
         }
+
+        // --- Eyedropper Tool ---
+        window.pickColor = async (inputId, schoolId, fieldToUpdate) => {
+            if (!window.EyeDropper) {
+                window.showError("Eyedropper not supported in this browser (Use Chrome or Edge).");
+                return;
+            }
+            try {
+                const eyeDropper = new window.EyeDropper();
+                const result = await eyeDropper.open();
+                document.getElementById(inputId).value = result.sRGBHex;
+                if (schoolId && fieldToUpdate) {
+                    window.updateSchoolColor(schoolId, fieldToUpdate, result.sRGBHex);
+                }
+            } catch (e) {
+                // User canceled
+            }
+        };
 
         // --- Meets Logic ---
         window.addMeet = () => {
@@ -604,21 +631,27 @@
 
         function renderSchools() {
             document.getElementById('schools-list').innerHTML = schools.sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`
-                <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between shadow-md">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 overflow-hidden shadow-inner">
-                            ${s.logo ? `<img src="${s.logo}" class="max-w-full max-h-full object-contain">` : `<i data-lucide="school" class="text-slate-300"></i>`}
-                        </div>
-                        <div>
-                            <span class="font-bold text-sm block text-white">${s.name}</span>
-                            <div class="flex items-center gap-2 mt-1">
-                                <label class="text-[10px] font-black text-sky-400 uppercase cursor-pointer hover:underline">Upload Logo<input type="file" class="hidden" onchange="window.handleLogoUpload('${s.id}', this)"></label>
-                                <input type="color" title="Primary Color" value="${s.color||'#ffffff'}" onchange="window.updateSchoolColor('${s.id}', 'color', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
-                                <input type="color" title="Secondary Color" value="${s.color2||'#020617'}" onchange="window.updateSchoolColor('${s.id}', 'color2', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
+                <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-col gap-3 shadow-md">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 overflow-hidden shadow-inner">
+                                ${s.logo ? `<img src="${s.logo}" class="max-w-full max-h-full object-contain">` : `<i data-lucide="school" class="text-slate-300"></i>`}
                             </div>
+                            <span class="font-bold text-sm block text-white">${s.name}</span>
+                        </div>
+                        <button onclick="window.removeSchool('${s.id}')" class="text-slate-700 hover:text-red-500 p-2"><i data-lucide="trash-2" size="16"></i></button>
+                    </div>
+                    <div class="flex items-center gap-4 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                        <label class="text-[10px] font-black text-sky-400 uppercase cursor-pointer hover:underline">Upload Logo<input type="file" class="hidden" onchange="window.handleLogoUpload('${s.id}', this)"></label>
+                        <div class="flex items-center gap-1">
+                            <input id="color1-${s.id}" type="color" title="Primary Color" value="${s.color||'#ffffff'}" onchange="window.updateSchoolColor('${s.id}', 'color', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
+                            <button onclick="window.pickColor('color1-${s.id}', '${s.id}', 'color')" class="text-slate-500 hover:text-white" title="Eyedropper"><i data-lucide="pipette" size="12"></i></button>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input id="color2-${s.id}" type="color" title="Secondary Color" value="${s.color2||'#020617'}" onchange="window.updateSchoolColor('${s.id}', 'color2', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
+                            <button onclick="window.pickColor('color2-${s.id}', '${s.id}', 'color2')" class="text-slate-500 hover:text-white" title="Eyedropper"><i data-lucide="pipette" size="12"></i></button>
                         </div>
                     </div>
-                    <button onclick="window.removeSchool('${s.id}')" class="text-slate-700 hover:text-red-500 p-2"><i data-lucide="trash-2" size="16"></i></button>
                 </div>
             `).join('');
             if(window.lucide) window.lucide.createIcons();
@@ -686,7 +719,14 @@
         window.updateTypeUI = () => {
             document.getElementById('type-ind').className = gType==='individual' ? 'flex-1 py-2 rounded-lg font-bold text-sm bg-purple-600 text-white shadow-lg' : 'flex-1 py-2 rounded-lg font-bold text-sm text-slate-500';
             document.getElementById('type-team').className = gType==='team' ? 'flex-1 py-2 rounded-lg font-bold text-sm bg-purple-600 text-white shadow-lg' : 'flex-1 py-2 rounded-lg font-bold text-sm text-slate-500';
-            document.getElementById('gen-athlete').style.display = gType==='individual' ? 'block' : 'none';
+            
+            if (gType === 'individual') {
+                document.getElementById('gen-athlete').style.display = 'block';
+                document.getElementById('gen-team-athletes').style.display = 'none';
+            } else {
+                document.getElementById('gen-athlete').style.display = 'none';
+                document.getElementById('gen-team-athletes').style.display = 'block';
+            }
         };
 
         window.updateSelects = () => {
@@ -696,7 +736,6 @@
             document.getElementById('gen-meet').innerHTML = '<option value="">Select Meet...</option>' + meets.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
             document.getElementById('gen-school').innerHTML = '<option value="">Select School...</option>' + schools.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
             
-            // Restore selection if valid
             if (meets.find(m => m.id === currentMeetId)) document.getElementById('gen-meet').value = currentMeetId;
             if (schools.find(s => s.id === currentSchoolId)) document.getElementById('gen-school').value = currentSchoolId;
 
@@ -722,8 +761,20 @@
         };
 
         window.updateRU = (idx, f, v) => { runnerUps[idx][f]=v; window.draw(); };
-        window.processPodiumPhoto = async (i) => { gPhoto = await compress(i.files[0], 1080); document.getElementById('photo-status').innerText="Ready ✅"; window.draw(); };
+        window.processPodiumPhoto = async (i) => { 
+            gPhoto = await compress(i.files[0], 1200); 
+            document.getElementById('photo-status').innerText="Ready ✅"; 
+            photoTransform = { panX: 0, panY: 0, scale: 1 }; // reset photo transform on new upload
+            window.draw(); 
+        };
         
+        window.resetLayout = () => {
+            swLogoTransform = { x: null, y: null, scale: 1 };
+            sponsorTransform = { x: null, y: null, scale: 1 };
+            photoTransform = { panX: 0, panY: 0, scale: 1 };
+            window.draw();
+        };
+
         window.clearGenerator = () => {
             editingId = null;
             document.getElementById('edit-mode-banner').classList.add('hidden');
@@ -731,12 +782,14 @@
             document.getElementById('gen-meet').value = '';
             document.getElementById('gen-event').value = '';
             document.getElementById('gen-athlete').value = '';
+            document.getElementById('gen-team-athletes').value = '';
             document.getElementById('gen-school').value = '';
             document.getElementById('gen-mark').value = '';
             document.getElementById('gen-record').value = 'None';
             runnerUps = JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
             gPhoto = null;
             document.getElementById('photo-status').innerText="Upload Podium / Team Photo";
+            window.resetLayout();
             window.updateSelects();
             window.draw();
         };
@@ -755,7 +808,6 @@
 
             let s = item.state;
 
-            // Backward compatibility for older records
             if (!s) {
                 const legacyData = item.data || item;
                 const matchedSchool = schools.find(sc => sc.name === legacyData.schoolName);
@@ -765,13 +817,17 @@
                     meetId: matchedMeet ? matchedMeet.id : '',
                     event: legacyData.eventName || '',
                     athlete: legacyData.athleteName || '',
+                    teamAthletes: '',
                     schoolId: matchedSchool ? matchedSchool.id : '',
                     mark: legacyData.mark || '',
                     record: legacyData.recordType || 'None',
                     type: legacyData.athleteName ? 'individual' : 'team',
                     style: 'classic',
                     photo: null,
-                    runnerUps: JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS))
+                    runnerUps: JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS)),
+                    swLogoTransform: { x: null, y: null, scale: 1 },
+                    sponsorTransform: { x: null, y: null, scale: 1 },
+                    photoTransform: { panX: 0, panY: 0, scale: 1 }
                 };
             }
 
@@ -782,11 +838,17 @@
             else document.getElementById('photo-status').innerText="Upload Podium / Team Photo";
             
             runnerUps = s.runnerUps ? JSON.parse(JSON.stringify(s.runnerUps)) : JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
+            
+            // Load transforms
+            swLogoTransform = s.swLogoTransform || { x: null, y: null, scale: 1 };
+            sponsorTransform = s.sponsorTransform || { x: null, y: null, scale: 1 };
+            photoTransform = s.photoTransform || { panX: 0, panY: 0, scale: 1 };
 
             document.getElementById('gen-meet').value = s.meetId || '';
             window.updateGenEvents(); 
             document.getElementById('gen-event').value = s.event || '';
             document.getElementById('gen-athlete').value = s.athlete || '';
+            document.getElementById('gen-team-athletes').value = s.teamAthletes || '';
             document.getElementById('gen-school').value = s.schoolId || '';
             document.getElementById('gen-mark').value = s.mark || '';
             document.getElementById('gen-record').value = s.record || 'None';
@@ -799,8 +861,122 @@
         };
 
 
+        // --- INTERACTIVE CANVAS ENGINE ---
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
+
+        // Drag/Pan state
+        let activeDrag = null; // 'sw', 'sponsor', 'photo'
+        let lastMouse = {x: 0, y: 0};
+        let initialPinchDistance = null;
+
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('touchstart', handlePointerDown, {passive: false});
+
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('touchmove', handlePointerMove, {passive: false});
+
+        canvas.addEventListener('mouseup', handlePointerUp);
+        canvas.addEventListener('touchend', handlePointerUp);
+        canvas.addEventListener('mouseleave', handlePointerUp);
+
+        canvas.addEventListener('wheel', handleWheel, {passive: false});
+
+        function getCanvasPoint(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function hitTest(pt) {
+            if (hitBoxes.sw && pt.x >= hitBoxes.sw.x && pt.x <= hitBoxes.sw.x + hitBoxes.sw.w && pt.y >= hitBoxes.sw.y && pt.y <= hitBoxes.sw.y + hitBoxes.sw.h) return 'sw';
+            if (hitBoxes.sponsor && pt.x >= hitBoxes.sponsor.x && pt.x <= hitBoxes.sponsor.x + hitBoxes.sponsor.w && pt.y >= hitBoxes.sponsor.y && pt.y <= hitBoxes.sponsor.y + hitBoxes.sponsor.h) return 'sponsor';
+            if (hitBoxes.photo && pt.x >= hitBoxes.photo.x && pt.x <= hitBoxes.photo.x + hitBoxes.photo.w && pt.y >= hitBoxes.photo.y && pt.y <= hitBoxes.photo.y + hitBoxes.photo.h) return 'photo';
+            return null;
+        }
+
+        function handlePointerDown(e) {
+            if(e.touches && e.touches.length === 2) {
+                activeDrag = 'pinch';
+                const p1 = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+                const p2 = {x: e.touches[1].clientX, y: e.touches[1].clientY};
+                initialPinchDistance = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                e.preventDefault();
+                return;
+            }
+            const pt = getCanvasPoint(e);
+            activeDrag = hitTest(pt);
+            if (activeDrag) {
+                e.preventDefault();
+                lastMouse = pt;
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (activeDrag === 'pinch' && e.touches && e.touches.length === 2) {
+                e.preventDefault();
+                const p1 = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+                const p2 = {x: e.touches[1].clientX, y: e.touches[1].clientY};
+                const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                if (initialPinchDistance) {
+                    const delta = (dist - initialPinchDistance) * 0.01;
+                    photoTransform.scale = Math.max(0.1, photoTransform.scale + delta);
+                    initialPinchDistance = dist;
+                    window.draw();
+                }
+                return;
+            }
+
+            if (!activeDrag) return;
+            e.preventDefault();
+            const pt = getCanvasPoint(e);
+            const dx = pt.x - lastMouse.x;
+            const dy = pt.y - lastMouse.y;
+            
+            if (activeDrag === 'sw') {
+                if(swLogoTransform.x === null) swLogoTransform.x = hitBoxes.sw.x;
+                if(swLogoTransform.y === null) swLogoTransform.y = hitBoxes.sw.y;
+                swLogoTransform.x += dx;
+                swLogoTransform.y += dy;
+            } else if (activeDrag === 'sponsor') {
+                if(sponsorTransform.x === null) sponsorTransform.x = hitBoxes.sponsor.x;
+                if(sponsorTransform.y === null) sponsorTransform.y = hitBoxes.sponsor.y;
+                sponsorTransform.x += dx;
+                sponsorTransform.y += dy;
+            } else if (activeDrag === 'photo') {
+                photoTransform.panX += dx;
+                photoTransform.panY += dy;
+            }
+            lastMouse = pt;
+            window.draw();
+        }
+
+        function handlePointerUp() {
+            activeDrag = null;
+            initialPinchDistance = null;
+        }
+
+        function handleWheel(e) {
+            const pt = getCanvasPoint(e);
+            const hit = hitTest(pt);
+            if (hit === 'photo') {
+                e.preventDefault();
+                photoTransform.scale = Math.max(0.1, photoTransform.scale - e.deltaY * 0.002);
+                window.draw();
+            } else if (hit === 'sw') {
+                e.preventDefault();
+                swLogoTransform.scale = Math.max(0.1, swLogoTransform.scale - e.deltaY * 0.002);
+                window.draw();
+            } else if (hit === 'sponsor') {
+                e.preventDefault();
+                sponsorTransform.scale = Math.max(0.1, sponsorTransform.scale - e.deltaY * 0.002);
+                window.draw();
+            }
+        }
 
         window.draw = async () => {
             const w = 1080;
@@ -814,7 +990,7 @@
             const mark = document.getElementById('gen-mark').value;
             const record = document.getElementById('gen-record').value;
             
-            // Dual Colors: School Primary and Secondary
+            // Dual Colors
             const sColor1 = school ? (school.color || '#0ea5e9') : '#0ea5e9';
             const sColor2 = school ? (school.color2 || '#020617') : '#020617'; 
 
@@ -825,26 +1001,68 @@
             const ruData = await Promise.all(activeRUs.map(async x=>({...x, logo: await load(schools.find(s=>s.id===x.schoolId)?.logo)})));
 
             ctx.clearRect(0,0,w,h);
+            hitBoxes = { sw: null, sponsor: null, photo: null };
             
-            // Helper to draw photo smartly contained inside a box
+            // Helper to draw photo smartly contained and handle panning/zooming
             const drawSmartPhoto = (img, x, y, boxW, boxH) => {
+                hitBoxes.photo = { x, y, w: boxW, h: boxH };
                 ctx.save();
-                // Blur Background fill
+                
+                // Blurred Background fill
                 ctx.beginPath(); ctx.roundRect(x,y,boxW,boxH, gStyle==='poster'?0:20); ctx.fill(); ctx.clip();
                 ctx.filter = 'blur(15px)';
                 ctx.drawImage(img, x-20, y-20, boxW+40, boxH+40);
                 ctx.filter = 'none';
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 ctx.fillRect(x,y,boxW,boxH);
 
-                // Fit Photo (Contain, anchored slightly towards top)
-                const scale = Math.min(boxW / img.width, boxH / img.height);
-                const fitW = img.width * scale;
-                const fitH = img.height * scale;
-                // Offset Y slightly top-weighted for team photos
-                const offsetY = (boxH - fitH) * 0.2; 
-                ctx.drawImage(img, x + (boxW - fitW)/2, y + offsetY, fitW, fitH);
+                // Fit Photo (Contain initially)
+                const baseScale = Math.min(boxW / img.width, boxH / img.height);
+                const fitW = img.width * baseScale * photoTransform.scale;
+                const fitH = img.height * baseScale * photoTransform.scale;
+                
+                // Offset Y slightly top-weighted natively
+                const offsetY = (boxH - (img.height * baseScale)) * 0.2; 
+                
+                ctx.drawImage(img, 
+                    x + (boxW - fitW)/2 + photoTransform.panX, 
+                    y + offsetY + photoTransform.panY, 
+                    fitW, fitH);
                 ctx.restore();
+            };
+
+            // Helper to handle SW Logo drawing & hitboxes
+            const renderSWLogo = (defX, defY, lW, lH, alignCenter = false) => {
+                let finalW = lW * swLogoTransform.scale;
+                let finalH = lH * swLogoTransform.scale;
+                
+                let startX = defX;
+                if (alignCenter) startX = (w/2) - (lW/2);
+                
+                let finalX = swLogoTransform.x !== null ? swLogoTransform.x : startX;
+                let finalY = swLogoTransform.y !== null ? swLogoTransform.y : defY;
+
+                ctx.drawImage(swLogoImg, finalX, finalY, finalW, finalH);
+                hitBoxes.sw = { x: finalX, y: finalY, w: finalW, h: finalH };
+            };
+
+            // Helper to handle Sponsor Logo drawing & hitboxes
+            const renderSponsorLogo = () => {
+                if (!spLogo) return;
+                let defW = 180;
+                let defH = defW * (spLogo.height / spLogo.width);
+                
+                let finalW = defW * sponsorTransform.scale;
+                let finalH = defH * sponsorTransform.scale;
+                
+                let defX = w - defW - 40;
+                let defY = h - defH - 40;
+                
+                let finalX = sponsorTransform.x !== null ? sponsorTransform.x : defX;
+                let finalY = sponsorTransform.y !== null ? sponsorTransform.y : defY;
+
+                ctx.drawImage(spLogo, finalX, finalY, finalW, finalH);
+                hitBoxes.sponsor = { x: finalX, y: finalY, w: finalW, h: finalH };
             };
 
             if (gStyle === 'classic') {
@@ -856,31 +1074,24 @@
                 
                 if(sLogo){ ctx.globalAlpha=0.15; ctx.drawImage(sLogo,300,300,900,900); ctx.globalAlpha=1.0; }
                 
-                // SportzWire Banner overlay
                 ctx.fillStyle=hexToRgba(sColor2, 0.6); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
                 
                 if (swLogoImg) {
-                    const lH = 100; const lW = swLogoImg.width * (lH / swLogoImg.height);
-                    ctx.drawImage(swLogoImg, 40, 20, lW, lH);
+                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    renderSWLogo(40, 25, lW, lH);
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 80px sans-serif'; ctx.textAlign='left'; ctx.fillText('SPORTZWIRE',40,95);
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 70px sans-serif'; ctx.textAlign='left'; ctx.fillText('SPORTZWIRE',40,90);
                 }
                 
                 if(meet){ ctx.fillStyle='#e2e8f0'; ctx.font='bold 24px sans-serif'; ctx.textAlign='right'; ctx.fillText(meet.name.toUpperCase(),1040,65); }
 
-                // Dynamic vertical spacing to prevent overlap
                 let maxPH = 540;
                 if (ruData.length > 0) maxPH = 400;
                 if (ruData.length > 2) maxPH = 300; 
 
                 let y = 160;
                 if (pImg) {
-                    ctx.save(); ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=30;
-                    ctx.beginPath(); ctx.roundRect(60,160,960,maxPH,20); ctx.fill(); 
-                    ctx.restore();
-
                     drawSmartPhoto(pImg, 60, 160, 960, maxPH);
-                    
                     ctx.strokeStyle=sColor1; ctx.lineWidth=10; ctx.strokeRect(60,160,960,maxPH);
                     y = 160+maxPH+50;
                 } else { y = 350; }
@@ -917,21 +1128,16 @@
                 ctx.fillStyle=hexToRgba(sColor2, 0.4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
                 
                 if (swLogoImg) {
-                    const lH = 120; const lW = swLogoImg.width * (lH / swLogoImg.height);
-                    ctx.drawImage(swLogoImg, w/2 - lW/2, 10, lW, lH);
+                    const lH = 100; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    renderSWLogo(0, 20, lW, lH, true);
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 100px sans-serif'; ctx.textAlign='center'; ctx.fillText('SPORTZWIRE', w/2, 110);
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 90px sans-serif'; ctx.textAlign='center'; ctx.fillText('SPORTZWIRE', w/2, 105);
                 }
 
-                // Dynamic max photo height
                 let maxPH = 480;
                 if (ruData.length > 2) maxPH = 350;
 
                 if(pImg){
-                    ctx.save(); ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=50;
-                    ctx.beginPath(); ctx.roundRect(100,160,880,maxPH,0); ctx.fill(); 
-                    ctx.restore();
-                    
                     drawSmartPhoto(pImg, 100, 160, 880, maxPH);
                     
                     ctx.strokeStyle=sColor1; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(100,160+maxPH); ctx.lineTo(980,160+maxPH); ctx.stroke();
@@ -961,9 +1167,7 @@
                         ctx.textAlign='left'; y+=50;
                     });
                 }
-
             } else if (gStyle === 'poster') {
-                // Shifted layout up slightly to absolutely ensure no overlaps
                 const splitY = 650;
                 ctx.fillStyle = '#0f0a0a'; ctx.fillRect(0, 0, w, h);
 
@@ -973,20 +1177,18 @@
                     ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, w, splitY + 50);
                 }
 
-                // SW custom logo top overlay
                 if (swLogoImg) {
-                    const lH = 120; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    const lH = 140; const lW = swLogoImg.width * (lH / swLogoImg.height);
                     ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
-                    ctx.drawImage(swLogoImg, w/2 - lW/2, 20, lW, lH);
+                    renderSWLogo(0, 30, lW, lH, true);
                     ctx.shadowBlur=0;
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 100px sans-serif'; ctx.textAlign='center'; 
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 110px sans-serif'; ctx.textAlign='center'; 
                     ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
-                    ctx.fillText('SPORTZWIRE', w/2, 110);
+                    ctx.fillText('SPORTZWIRE', w/2, 120);
                     ctx.shadowBlur=0;
                 }
 
-                // Dual gradient using school Primary and Secondary colors
                 ctx.fillStyle = sColor1; ctx.fillRect(0, splitY, w, h - splitY);
                 const bGrad = ctx.createLinearGradient(0, splitY, 0, h);
                 bGrad.addColorStop(0, 'rgba(0,0,0,0.2)'); 
@@ -1032,64 +1234,116 @@
                 }
             }
 
-            // Universal Elements applied to all styles
             if (record !== 'None') {
                 ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.roundRect(40, 140, 320, 65, 12); ctx.fill();
                 ctx.fillStyle='#fff'; ctx.font='bold 32px sans-serif'; ctx.textAlign='center'; ctx.fillText(record.toUpperCase(),200,182);
             }
-            if (spLogo) {
-                // Shifted slightly to ensure it avoids text borders
-                const sW=180, sH=sW*(spLogo.height/spLogo.width);
-                ctx.drawImage(spLogo, w-sW-40, h-sH-40, sW, sH);
-            }
+            
+            renderSponsorLogo();
             window.updateCaption();
+        };
+
+        const parseTime = (str) => {
+            if (!str) return NaN;
+            let s = str.replace(/[a-zA-Z]/g, '').trim(); 
+            if (s.includes(':')) {
+                let parts = s.split(':');
+                return parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+            }
+            return parseFloat(s);
         };
 
         window.updateCaption = () => {
             const m = meets.find(x=>x.id===document.getElementById('gen-meet').value);
             const s = schools.find(x=>x.id===document.getElementById('gen-school').value);
-            const e = document.getElementById('gen-event').value, a = document.getElementById('gen-athlete').value;
-            const mk = document.getElementById('gen-mark').value, rc = document.getElementById('gen-record').value;
-            if(!e) return;
-            const n = gType==='individual'?a:(s?s.name:'the field');
+            const e = document.getElementById('gen-event').value;
+            const a = document.getElementById('gen-athlete').value;
+            const tAthletes = document.getElementById('gen-team-athletes').value;
+            const mk = document.getElementById('gen-mark').value;
+            const rc = document.getElementById('gen-record').value;
             
+            if(!e) return;
+            
+            const n = gType==='individual' ? (a ? a : (s?s.name:'the field')) : (s?s.name:'the field');
+            const relayNames = (gType==='team' && tAthletes) ? tAthletes : '';
+            const activeRUs = runnerUps.filter(x=>x.schoolId && x.mark);
+
+            let marginText = "put on a strong performance";
+            if (activeRUs.length > 0 && mk && activeRUs[0].mark) {
+                 let t1 = parseTime(mk);
+                 let t2 = parseTime(activeRUs[0].mark);
+                 if (!isNaN(t1) && !isNaN(t2)) {
+                     let diff = Math.abs(t2 - t1);
+                     let isField = /jump|vault|put|discus|javelin/i.test(e);
+                     if (isField) {
+                         if (diff > 0.5) marginText = "dominated the field";
+                         else marginText = "narrowly edged out the competition in a close battle";
+                     } else {
+                         if (diff <= 0.3) marginText = "pulled off a thrilling photo-finish victory";
+                         else if (diff <= 1.0) marginText = "fought hard for a close win";
+                         else if (diff >= 3.0) marginText = "ran away with a completely dominant performance";
+                         else marginText = "secured a decisive victory";
+                     }
+                 }
+            }
+
             let c = `SportzWire News | ${m?.name||'Track Coverage'}\n\n`;
-            c += `In the ${e}, ${n} from ${s?s.name:'the field'} secured the top spot with a performance of ${mk||'TBD'}. `;
-            if(rc!=='None') c += `This effort sets a new ${rc}! 🏆\n\n`;
+            
+            c += `The ${e} featured some incredible talent today. `;
+            if (gType === 'team') {
+                c += `${s?s.name:'The winning team'} ${marginText} to take the top spot with a mark of ${mk||'TBD'}. `;
+                if (relayNames) c += `The squad of ${relayNames} delivered when it mattered most. `;
+            } else {
+                c += `${a || (s?s.name:'The winner')} ${marginText} to capture first place, posting a mark of ${mk||'TBD'}. `;
+            }
+            
+            if(rc!=='None') c += `This exceptional effort establishes a new ${rc}!\n\n`;
             else c += `\n\n`;
             
-            const activeRUs = runnerUps.filter(x=>x.schoolId && x.mark);
-            if(activeRUs.length > 0 || mk){
-                c += `Top Finishers:\n`;
-                if(s) c += `1st: ${s?.name||''} (${mk})\n`;
-                activeRUs.forEach(ru => { c += `${ru.place}: ${schools.find(sc=>sc.id===ru.schoolId)?.name} (${ru.mark})\n`; });
+            c += `Meet Results:\n`;
+            if(s) {
+                c += `1. ${s.name}`;
+                if (gType === 'individual' && a) c += ` (${a})`;
+                if (gType === 'team' && tAthletes) c += ` (${tAthletes})`;
+                if (mk) c += ` : ${mk}`;
+                c += `\n`;
             }
+            
+            activeRUs.forEach(ru => { 
+                let ruSchool = schools.find(sc=>sc.id===ru.schoolId);
+                c += `${ru.place.replace('nd','').replace('rd','').replace('th','')}. ${ruSchool?.name||'Unknown'} : ${ru.mark}\n`; 
+            });
+            
             c += `\n#SportzWire #PIAAD2 #TrackAndField #${s?s.name.replace(/\s+/g,''):'Track'}`;
             document.getElementById('gen-caption').value = c;
         };
 
         window.generateAndSave = async () => {
             const u = canvas.toDataURL('image/jpeg', 0.9);
-            // If editing, use existing ID. Otherwise create new.
             const id = editingId ? editingId : Date.now().toString();
             
             const mid = document.getElementById('gen-meet').value, sid = document.getElementById('gen-school').value;
             
-            // Build the state object to allow easy editing later
             const genState = {
                 meetId: mid,
                 event: document.getElementById('gen-event').value,
                 athlete: document.getElementById('gen-athlete').value,
+                teamAthletes: document.getElementById('gen-team-athletes').value,
                 schoolId: sid,
                 mark: document.getElementById('gen-mark').value,
                 record: document.getElementById('gen-record').value,
                 type: gType,
                 style: gStyle,
                 photo: gPhoto,
-                runnerUps: JSON.parse(JSON.stringify(runnerUps))
+                runnerUps: JSON.parse(JSON.stringify(runnerUps)),
+                swLogoTransform: JSON.parse(JSON.stringify(swLogoTransform)),
+                sponsorTransform: JSON.parse(JSON.stringify(sponsorTransform)),
+                photoTransform: JSON.parse(JSON.stringify(photoTransform))
             };
 
-            const rData = { id: id, meetName: meets.find(x=>x.id===mid)?.name||'Unknown', eventName: genState.event, athleteName: genState.athlete, schoolName: schools.find(s=>s.id===sid)?.name||'Unknown', mark: genState.mark, recordType: genState.record, timestamp: Date.now(), state: genState };
+            const displayAthlete = gType === 'team' ? genState.teamAthletes : genState.athlete;
+
+            const rData = { id: id, meetName: meets.find(x=>x.id===mid)?.name||'Unknown', eventName: genState.event, athleteName: displayAthlete, schoolName: schools.find(s=>s.id===sid)?.name||'Unknown', mark: genState.mark, recordType: genState.record, timestamp: Date.now(), state: genState };
             
             const tC = document.createElement('canvas'); 
             tC.width=300; tC.height=(canvas.height/canvas.width)*300; 
@@ -1112,7 +1366,7 @@
             renderResults();
             renderHistory();
 
-            window.clearGenerator(); // Clear edit mode cleanly
+            window.clearGenerator(); 
 
             const l = document.createElement('a'); l.download=`sportzwire-${id}.jpg`; l.href=u; l.click();
             window.showSuccess("Graphic Saved & Logged Successfully! ✅");
