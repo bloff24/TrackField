@@ -33,6 +33,11 @@
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+        /* Custom Slider Styling */
+        .custom-slider { -webkit-appearance: none; background: transparent; }
+        .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #0ea5e9; margin-top: -6px; cursor: pointer; }
+        .custom-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #334155; border-radius: 2px; cursor: pointer; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
@@ -91,7 +96,7 @@
                 </button>
             </nav>
             <div class="p-4 border-t border-slate-800 text-center space-y-3">
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Cloud v5.1</span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Cloud v5.2</span>
                 <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
             </div>
         </aside>
@@ -202,6 +207,18 @@
                         
                         <div class="relative flex justify-center bg-black rounded-lg overflow-hidden border border-slate-800 shadow-2xl">
                             <canvas id="main-canvas" style="max-height: 600px; object-fit: contain; width: 100%;"></canvas>
+                        </div>
+                        
+                        <!-- Logo Scale Sliders -->
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">SW Logo Size</span>
+                                <input type="range" id="sw-slider" min="0.3" max="3" step="0.05" value="1" oninput="window.updateSWScale(this.value)" class="w-full custom-slider">
+                            </div>
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 flex flex-col gap-1">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">Sponsor Size</span>
+                                <input type="range" id="sponsor-slider" min="0.3" max="3" step="0.05" value="1" oninput="window.updateSponsorScale(this.value)" class="w-full custom-slider">
+                            </div>
                         </div>
 
                         <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 space-y-3">
@@ -488,7 +505,7 @@
                     DEFAULT_SCHOOLS.forEach(s => setDoc(doc(schoolsRef, s.id), s));
                 } else {
                     schools = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    renderSchools(); window.updateSelects(); window.draw();
+                    renderSchools(); window.updateSelects(); window.requestDraw();
                 }
             }, e => console.error(e));
 
@@ -509,12 +526,12 @@
                     gSponsor = data.sponsorLogo || null;
                     document.getElementById('sw-logo-status').innerText = gSwLogo ? 'Loaded ✅' : 'Upload';
                     document.getElementById('sponsor-status').innerText = gSponsor ? 'Loaded ✅' : 'Upload';
-                    window.draw();
+                    window.requestDraw();
                 }
             }, e => console.error(e));
 
             if(window.lucide) window.lucide.createIcons();
-            window.draw();
+            window.requestDraw();
         }
 
         // --- Global Helpers ---
@@ -523,7 +540,7 @@
             document.getElementById(`tab-${id}`).classList.add('active');
             document.querySelectorAll('[data-tab]').forEach(b=>b.classList.replace('btn-active','btn-inactive'));
             document.querySelectorAll(`[data-tab="${id}"]`).forEach(b=>b.classList.replace('btn-inactive','btn-active'));
-            if(id === 'generator') window.draw();
+            if(id === 'generator') window.requestDraw();
             window.scrollTo(0,0);
         };
 
@@ -745,8 +762,8 @@
         };
 
         // --- Generator Logic ---
-        window.setStyle = (s) => { gStyle=s; window.updateStyleUI(); window.draw(); };
-        window.setEventType = (t) => { gType=t; window.updateTypeUI(); window.draw(); };
+        window.setStyle = (s) => { gStyle=s; window.updateStyleUI(); window.requestDraw(); };
+        window.setEventType = (t) => { gType=t; window.updateTypeUI(); window.requestDraw(); };
         
         window.updateStyleUI = () => {
             ['classic', 'splash', 'poster'].forEach(s => {
@@ -803,17 +820,17 @@
                 e.innerHTML = '<option value="">Select Event...</option>' + m.events.map(x=>`<option value="${x}">${x}</option>`).join('');
                 if (m.events.includes(currentEvent)) e.value = currentEvent;
             }
-            window.draw();
+            window.requestDraw();
         };
 
-        window.updateRU = (idx, f, v) => { runnerUps[idx][f]=v; window.draw(); };
+        window.updateRU = (idx, f, v) => { runnerUps[idx][f]=v; window.requestDraw(); };
         
         window.processPodiumPhoto = async (i) => { 
             gPhoto = await compress(i.files[0], 1200); 
             document.getElementById('photo-status').innerText="Ready ✅"; 
             photoTransform = { panX: 0, panY: 0, scale: 1, locked: false }; // reset photo transform on new upload
             window.updateLockUI();
-            window.draw(); 
+            window.requestDraw(); 
         };
         
         window.updateLockUI = () => {
@@ -827,13 +844,19 @@
                 btnText.innerText = "Unlocked";
                 if(icon) icon.setAttribute('data-lucide', 'unlock');
             }
+            
+            const swS = document.getElementById('sw-slider');
+            const spS = document.getElementById('sponsor-slider');
+            if(swS) swS.value = swLogoTransform.scale;
+            if(spS) spS.value = sponsorTransform.scale;
+
             if(window.lucide) window.lucide.createIcons();
         };
 
         window.togglePhotoLock = () => {
             photoTransform.locked = !photoTransform.locked;
             window.updateLockUI();
-            window.draw();
+            window.requestDraw();
         };
         
         window.resetLayout = () => {
@@ -842,7 +865,7 @@
             photoTransform = { panX: 0, panY: 0, scale: 1, locked: false };
             recordTransform = { x: null, y: null, scale: 1 };
             window.updateLockUI();
-            window.draw();
+            window.requestDraw();
         };
 
         window.clearGenerator = () => {
@@ -862,7 +885,7 @@
             window.resetLayout();
             window.updateSelects();
             window.updateLockUI();
-            window.draw();
+            window.requestDraw();
         };
 
         window.loadState = (id, source) => {
@@ -931,6 +954,17 @@
             window.updateLockUI();
             window.switchTab('generator');
             window.showSuccess("Record loaded into editor.");
+        };
+
+        // --- Custom Sliders ---
+        window.updateSWScale = (val) => {
+            swLogoTransform.scale = parseFloat(val);
+            window.requestDraw();
+        };
+
+        window.updateSponsorScale = (val) => {
+            sponsorTransform.scale = parseFloat(val);
+            window.requestDraw();
         };
 
 
@@ -1051,10 +1085,14 @@
             } else if (hit === 'sw') {
                 e.preventDefault();
                 swLogoTransform.scale = Math.max(0.1, swLogoTransform.scale - e.deltaY * 0.002);
+                const slider = document.getElementById('sw-slider');
+                if(slider) slider.value = swLogoTransform.scale;
                 window.requestDraw();
             } else if (hit === 'sponsor') {
                 e.preventDefault();
                 sponsorTransform.scale = Math.max(0.1, sponsorTransform.scale - e.deltaY * 0.002);
+                const slider = document.getElementById('sponsor-slider');
+                if(slider) slider.value = sponsorTransform.scale;
                 window.requestDraw();
             } else if (hit === 'record') {
                 e.preventDefault();
@@ -1216,14 +1254,13 @@
 
             if (gStyle === 'classic') {
                 const grad = ctx.createLinearGradient(0,0,0,h);
-                grad.addColorStop(0, sColor2); 
-                grad.addColorStop(0.4, hexToRgba(sColor1, 0.5)); 
+                grad.addColorStop(0, hexToRgba(sColor2, 0.9)); 
+                grad.addColorStop(0.5, hexToRgba(sColor1, 0.5)); 
                 grad.addColorStop(1, '#020617');
                 ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
                 
                 if(sLogo){ ctx.globalAlpha=0.15; ctx.drawImage(sLogo,300,300,900,900); ctx.globalAlpha=1.0; }
                 
-                // SportzWire Banner overlay
                 ctx.fillStyle=hexToRgba(sColor2, 0.6); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
                 
                 if(meet){ ctx.fillStyle='#e2e8f0'; ctx.font='bold 24px sans-serif'; ctx.textAlign='right'; ctx.fillText(meet.name.toUpperCase(),1040,65); }
@@ -1244,13 +1281,14 @@
                 const name = gType==='individual'?athlete:(school?school.name:'');
                 if(name){ ctx.fillStyle='#fff'; ctx.font='bold 80px sans-serif'; ctx.fillText(name.toUpperCase(),w/2,y, 960); y+=70; }
 
-                // Default SW Logo position above the mark box
+                // Increased SW Logo Default Position (Right above Mark box)
                 if (swLogoImg) {
-                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    const lH = 110; 
+                    const lW = swLogoImg.width * (lH / swLogoImg.height);
                     renderSWLogo(w/2 - lW/2, y, lW, lH, true);
                     y += lH + 30;
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 50px sans-serif'; ctx.textAlign='center'; 
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 65px sans-serif'; ctx.textAlign='center'; 
                     ctx.fillText('SPORTZWIRE', w/2, y + 40);
                     y += 70;
                 }
@@ -1280,12 +1318,15 @@
                 }
 
             } else if (gStyle === 'splash') {
-                ctx.fillStyle='#0f0a0a'; ctx.fillRect(0,0,w,h);
+                const bgGrad = ctx.createLinearGradient(0,0,w,h);
+                bgGrad.addColorStop(0, hexToRgba(sColor1, 0.8));
+                bgGrad.addColorStop(1, hexToRgba(sColor2, 0.95));
+                ctx.fillStyle=bgGrad; ctx.fillRect(0,0,w,h);
                 
-                ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=12;
+                ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=12;
                 for(let i=0; i<8; i++){ ctx.beginPath(); ctx.moveTo(100+(i*120),0); ctx.lineTo(-400+(i*280),h); ctx.stroke(); }
 
-                ctx.fillStyle=hexToRgba(sColor2, 0.4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
+                ctx.fillStyle=hexToRgba(sColor2, 0.6); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
                 
                 let maxPH = 480;
                 if (ruData.length > 2) maxPH = 350;
@@ -1293,23 +1334,24 @@
                 if(pImg){
                     drawSmartPhoto(pImg, 100, 160, 880, maxPH);
                     
-                    ctx.strokeStyle=sColor1; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(100,160+maxPH); ctx.lineTo(980,160+maxPH); ctx.stroke();
-                    ctx.globalAlpha=0.3; ctx.lineWidth=24; ctx.stroke(); ctx.globalAlpha=1.0;
+                    ctx.strokeStyle='#ffffff'; ctx.lineWidth=10; ctx.beginPath(); ctx.moveTo(100,160+maxPH); ctx.lineTo(980,160+maxPH); ctx.stroke();
+                    ctx.globalAlpha=0.3; ctx.lineWidth=20; ctx.stroke(); ctx.globalAlpha=1.0;
                 }
 
                 let y = pImg ? 160 + maxPH + 70 : 400;
                 ctx.textAlign='center';
-                if(event){ ctx.fillStyle=sColor1; ctx.font='900 italic 55px sans-serif'; ctx.fillText(event.toUpperCase(), w/2, y, 900); y+=65; }
+                if(event){ ctx.fillStyle='#ffffff'; ctx.font='900 italic 55px sans-serif'; ctx.fillText(event.toUpperCase(), w/2, y, 900); y+=65; }
                 const n = gType==='individual'?athlete:(school?school.name:'');
                 if(n){ ctx.fillStyle='#fff'; ctx.font='bold 75px sans-serif'; ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=10; ctx.fillText(n.toUpperCase(), w/2, y, 960); ctx.shadowBlur=0; y+=85; }
 
-                // Default SW Logo position above the mark box
+                // Increased SW Logo Default Position (Right above Mark box)
                 if (swLogoImg) {
-                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    const lH = 110; 
+                    const lW = swLogoImg.width * (lH / swLogoImg.height);
                     renderSWLogo(w/2 - lW/2, y, lW, lH, true);
                     y += lH + 30;
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 50px sans-serif'; ctx.textAlign='center'; 
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 65px sans-serif'; ctx.textAlign='center'; 
                     ctx.fillText('SPORTZWIRE', w/2, y + 40);
                     y += 70;
                 }
@@ -1317,8 +1359,8 @@
                 if(mark){
                     const lS=160, mW=Math.min(ctx.measureText(mark).width, 500);
                     let x = (w-(mW+(sLogo?lS+40:0)))/2;
-                    if(sLogo){ ctx.shadowColor=sColor1; ctx.shadowBlur=30; ctx.drawImage(sLogo, x, y-130, lS, lS); ctx.shadowBlur=0; x+=lS+40; }
-                    ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.font='900 italic 130px sans-serif'; ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=10; ctx.fillText(mark, x, y, 500); ctx.shadowBlur=0; y+=60;
+                    if(sLogo){ ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=20; ctx.drawImage(sLogo, x, y-130, lS, lS); ctx.shadowBlur=0; x+=lS+40; }
+                    ctx.fillStyle='#facc15'; ctx.textAlign='left'; ctx.font='900 italic 130px sans-serif'; ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=10; ctx.fillText(mark, x, y, 500); ctx.shadowBlur=0; y+=60;
                 }
 
                 if(ruData.length > 0){
@@ -1375,17 +1417,18 @@
 
                 // SW custom logo top overlay - placed directly above leaderboard in poster
                 if (swLogoImg) {
-                    const lH = 70; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    const lH = 100; 
+                    const lW = swLogoImg.width * (lH / swLogoImg.height);
                     ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
                     renderSWLogo(w/2 - lW/2, currentY, lW, lH, true);
                     ctx.shadowBlur=0;
                     currentY += lH + 20;
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 40px sans-serif'; ctx.textAlign='center'; 
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 65px sans-serif'; ctx.textAlign='center'; 
                     ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
-                    ctx.fillText('SPORTZWIRE', w/2, currentY + 30);
+                    ctx.fillText('SPORTZWIRE', w/2, currentY + 40);
                     ctx.shadowBlur=0;
-                    currentY += 60;
+                    currentY += 70;
                 }
 
                 let startY = currentY;
@@ -1421,7 +1464,7 @@
             renderRecordBadge();
             renderSponsorLogo();
             window.updateCaption();
-        }
+        };
 
         const parseTime = (str) => {
             if (!str) return NaN;
