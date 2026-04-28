@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SportzWire Track App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .btn-active { color: #0ea5e9; background: rgba(14, 165, 233, 0.1); border-left: 4px solid #0ea5e9; }
@@ -182,7 +182,14 @@
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
                         <div class="flex justify-between items-end">
                             <h3 class="text-xs font-black text-slate-500 uppercase">Interactive Canvas</h3>
-                            <button onclick="window.resetLayout()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded font-bold transition-colors"><i data-lucide="rotate-ccw" class="inline mb-0.5 mr-1" size="10"></i>Reset Layout</button>
+                            <div class="flex gap-2">
+                                <button onclick="window.togglePhotoLock()" id="lock-btn" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded font-bold transition-colors">
+                                    <i data-lucide="unlock" class="inline mb-0.5 mr-1" size="10"></i><span id="lock-text">Unlocked</span>
+                                </button>
+                                <button onclick="window.resetLayout()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded font-bold transition-colors">
+                                    <i data-lucide="rotate-ccw" class="inline mb-0.5 mr-1" size="10"></i>Reset Layout
+                                </button>
+                            </div>
                         </div>
                         <p class="text-[10px] text-slate-400">Drag to pan photo or move logos. Scroll/pinch to zoom.</p>
                         
@@ -452,18 +459,18 @@
         
         let editingId = null; 
         let gStyle = 'classic', gType = 'individual', gPhoto = null;
-        let gSponsor = null;
-        let gSwLogo = null;
+        let gSponsor = localStorage.getItem('sw_sponsor_logo') || null;
+        let gSwLogo = localStorage.getItem('sw_custom_logo') || null;
         let runnerUps = JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
 
         // Interaction state for graphic elements
         let swLogoTransform = { x: null, y: null, scale: 1 };
         let sponsorTransform = { x: null, y: null, scale: 1 };
-        let photoTransform = { panX: 0, panY: 0, scale: 1 };
+        let photoTransform = { panX: 0, panY: 0, scale: 1, locked: false };
         let recordTransform = { x: null, y: null, scale: 1 };
         let hitBoxes = { sw: null, sponsor: null, photo: null, record: null };
 
-        // Realtime Firebase Listeners
+        // Syncs local variables to localStorage
         function startSync() {
             if (!auth.currentUser) return;
 
@@ -800,15 +807,37 @@
         window.processPodiumPhoto = async (i) => { 
             gPhoto = await compress(i.files[0], 1200); 
             document.getElementById('photo-status').innerText="Ready ✅"; 
-            photoTransform = { panX: 0, panY: 0, scale: 1 }; // reset photo transform on new upload
+            photoTransform = { panX: 0, panY: 0, scale: 1, locked: false }; // reset photo transform on new upload
+            window.updateLockUI();
             window.draw(); 
+        };
+        
+        window.updateLockUI = () => {
+            const btnText = document.getElementById('lock-text');
+            const icon = document.querySelector('#lock-btn i');
+            if (!btnText) return;
+            if (photoTransform.locked) {
+                btnText.innerText = "Locked";
+                if(icon) icon.setAttribute('data-lucide', 'lock');
+            } else {
+                btnText.innerText = "Unlocked";
+                if(icon) icon.setAttribute('data-lucide', 'unlock');
+            }
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.togglePhotoLock = () => {
+            photoTransform.locked = !photoTransform.locked;
+            window.updateLockUI();
+            window.draw();
         };
         
         window.resetLayout = () => {
             swLogoTransform = { x: null, y: null, scale: 1 };
             sponsorTransform = { x: null, y: null, scale: 1 };
-            photoTransform = { panX: 0, panY: 0, scale: 1 };
+            photoTransform = { panX: 0, panY: 0, scale: 1, locked: false };
             recordTransform = { x: null, y: null, scale: 1 };
+            window.updateLockUI();
             window.draw();
         };
 
@@ -828,6 +857,7 @@
             document.getElementById('photo-status').innerText="Upload Podium / Team Photo";
             window.resetLayout();
             window.updateSelects();
+            window.updateLockUI();
             window.draw();
         };
 
@@ -864,7 +894,7 @@
                     runnerUps: JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS)),
                     swLogoTransform: { x: null, y: null, scale: 1 },
                     sponsorTransform: { x: null, y: null, scale: 1 },
-                    photoTransform: { panX: 0, panY: 0, scale: 1 },
+                    photoTransform: { panX: 0, panY: 0, scale: 1, locked: false },
                     recordTransform: { x: null, y: null, scale: 1 }
                 };
             }
@@ -880,7 +910,7 @@
             // Load transforms
             swLogoTransform = s.swLogoTransform || { x: null, y: null, scale: 1 };
             sponsorTransform = s.sponsorTransform || { x: null, y: null, scale: 1 };
-            photoTransform = s.photoTransform || { panX: 0, panY: 0, scale: 1 };
+            photoTransform = s.photoTransform || { panX: 0, panY: 0, scale: 1, locked: false };
             recordTransform = s.recordTransform || { x: null, y: null, scale: 1 };
 
             document.getElementById('gen-meet').value = s.meetId || '';
@@ -895,6 +925,7 @@
             window.updateStyleUI();
             window.updateTypeUI();
             window.updateSelects();
+            window.updateLockUI();
             window.switchTab('generator');
             window.showSuccess("Record loaded into editor.");
         };
@@ -941,6 +972,7 @@
 
         function handlePointerDown(e) {
             if(e.touches && e.touches.length === 2) {
+                if (photoTransform.locked) return; // Prevent pinch if locked
                 activeDrag = 'pinch';
                 const p1 = {x: e.touches[0].clientX, y: e.touches[0].clientY};
                 const p2 = {x: e.touches[1].clientX, y: e.touches[1].clientY};
@@ -950,6 +982,7 @@
             }
             const pt = getCanvasPoint(e);
             activeDrag = hitTest(pt);
+            if (activeDrag === 'photo' && photoTransform.locked) activeDrag = null; // Prevent drag if locked
             if (activeDrag) {
                 e.preventDefault();
                 lastMouse = pt;
@@ -1008,7 +1041,7 @@
         function handleWheel(e) {
             const pt = getCanvasPoint(e);
             const hit = hitTest(pt);
-            if (hit === 'photo') {
+            if (hit === 'photo' && !photoTransform.locked) {
                 e.preventDefault();
                 photoTransform.scale = Math.max(0.1, photoTransform.scale - e.deltaY * 0.002);
                 window.draw();
@@ -1475,43 +1508,43 @@
             const displayAthlete = gType === 'team' ? genState.teamAthletes : genState.athlete;
 
             const rData = { id: id, meetName: meets.find(x=>x.id===mid)?.name||'Unknown', eventName: genState.event, athleteName: displayAthlete, schoolName: schools.find(s=>s.id===sid)?.name||'Unknown', mark: genState.mark, recordType: genState.record, timestamp: Date.now(), state: genState };
-            
-            const tC = document.createElement('canvas'); 
-            tC.width=300; tC.height=(canvas.height/canvas.width)*300; 
-            tC.getContext('2d').drawImage(canvas,0,0,tC.width,tC.height);
-            
-            const hData = { id: id, previewUrl: tC.toDataURL('image/jpeg', 0.6), date: new Date().toLocaleDateString(), data: rData, state: genState };
-            
-            if (editingId) {
-                const eIndexR = results.findIndex(x => x.id === editingId);
-                if (eIndexR >= 0) results[eIndexR] = rData;
-                
-                const eIndexH = history.findIndex(x => x.id === editingId);
-                if (eIndexH >= 0) history[eIndexH] = hData;
-            } else {
-                results.unshift(rData);
-                history.unshift(hData);
-            }
-            
-            // --- FIREBASE SAVING ---
-            const rRef = doc(resultsRef, id);
-            await setDoc(rRef, rData);
-            
-            const hRef = doc(historyRef, id);
-            await setDoc(hRef, hData);
-            // -----------------------
+            saveData();
+            renderResults();
+            renderHistory();
 
             window.clearGenerator(); 
 
-            // Hardened download to bypass browser restrictions
-            const l = document.createElement('a'); 
-            l.download=`sportzwire-${id}.jpg`; 
-            l.href=u; 
-            document.body.appendChild(l);
-            l.click();
-            document.body.removeChild(l);
-
-            window.showSuccess("Graphic Saved & Logged Successfully! ✅");
+            // Hardened download & share API for mobile bypassing
+            try {
+                const res = await fetch(u);
+                const blob = await res.blob();
+                const file = new File([blob], `sportzwire-${id}.jpg`, { type: 'image/jpeg' });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'SportzWire Graphic',
+                    });
+                    window.showSuccess("Graphic Ready to Save/Share! ✅");
+                } else {
+                    const l = document.createElement('a'); 
+                    l.download=`sportzwire-${id}.jpg`; 
+                    l.href=u; 
+                    document.body.appendChild(l);
+                    l.click();
+                    document.body.removeChild(l);
+                    window.showSuccess("Graphic Saved & Logged Successfully! ✅");
+                }
+            } catch(e) {
+                // Fallback download if user cancels or share fails
+                const l = document.createElement('a'); 
+                l.download=`sportzwire-${id}.jpg`; 
+                l.href=u; 
+                document.body.appendChild(l);
+                l.click();
+                document.body.removeChild(l);
+                window.showSuccess("Graphic Saved & Logged Successfully! ✅");
+            }
         };
 
         window.deleteHistory = async (id) => {
@@ -1549,20 +1582,17 @@
             if(window.lucide) window.lucide.createIcons();
         }
 
-        function renderHistory() {
-            document.getElementById('history-grid').innerHTML = history.map((h, i)=>`
-                <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex items-center shadow-md">
-                    <img src="${h.previewUrl}" class="w-24 h-24 object-cover bg-black">
-                    <div class="p-3 flex-1">
-                        <div class="text-xs font-black text-white uppercase">${h.data.eventName}</div>
-                        <div class="text-[10px] text-slate-500">${h.date}</div>
-                    </div>
-                    <button onclick="window.loadState('${h.id}', 'history')" class="p-4 text-slate-600 hover:text-sky-400 transition-colors"><i data-lucide="edit" size="18"></i></button>
-                    <button onclick="window.deleteHistory('${h.id}')" class="p-4 text-slate-700 hover:text-red-500 transition-colors"><i data-lucide="trash-2" size="18"></i></button>
-                </div>
-            `).join('');
-            if(window.lucide) window.lucide.createIcons();
-        }
+        window.copyCaption = () => { 
+            const t = document.getElementById('gen-caption'); 
+            t.focus();
+            t.setSelectionRange(0, 99999); // Mobile browser support 
+            try {
+                document.execCommand('copy'); 
+                window.showSuccess("Caption copied to clipboard! ✅");
+            } catch(e) {
+                window.showError("Failed to copy. Please copy manually.");
+            }
+        };
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
