@@ -709,19 +709,41 @@
             const sourceArr = source === 'results' ? results : history;
             const item = sourceArr.find(x => x.id === id);
             
-            if (!item || !item.state) {
-                window.showError("Legacy record format. Cannot load into editor.");
+            if (!item) {
+                window.showError("Record not found.");
                 return;
             }
 
             editingId = id; // Track the ID being edited
             document.getElementById('edit-mode-banner').classList.remove('hidden');
 
-            const s = item.state;
+            let s = item.state;
+
+            // Backward compatibility for older records saved before the 'state' object existed
+            if (!s) {
+                const legacyData = item.data || item;
+                const matchedSchool = schools.find(sc => sc.name === legacyData.schoolName);
+                const matchedMeet = meets.find(m => m.name === legacyData.meetName);
+
+                s = {
+                    meetId: matchedMeet ? matchedMeet.id : '',
+                    event: legacyData.eventName || '',
+                    athlete: legacyData.athleteName || '',
+                    schoolId: matchedSchool ? matchedSchool.id : '',
+                    mark: legacyData.mark || '',
+                    record: legacyData.recordType || 'None',
+                    type: legacyData.athleteName ? 'individual' : 'team',
+                    style: 'classic',
+                    photo: null,
+                    runnerUps: JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS))
+                };
+            }
+
             gStyle = s.style || 'classic';
             gType = s.type || 'individual';
             gPhoto = s.photo || null;
             if(gPhoto) document.getElementById('photo-status').innerText="Ready ✅";
+            else document.getElementById('photo-status').innerText="Upload Podium / Team Photo";
             
             runnerUps = s.runnerUps ? JSON.parse(JSON.stringify(s.runnerUps)) : JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
 
