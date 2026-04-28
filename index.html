@@ -82,7 +82,7 @@
                 </button>
             </nav>
             <div class="p-4 border-t border-slate-800 text-center space-y-3">
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v2.7</span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v3.0</span>
                 <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
             </div>
         </aside>
@@ -225,7 +225,7 @@
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
                         <h2 class="text-xl font-bold flex items-center gap-2 text-sky-400"><i data-lucide="settings"></i> Global Settings</h2>
                         
-                        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer hover:border-sky-500 transition-all">
+                        <div class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl transition-all">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="image" class="text-sky-400"></i>
                                 <div>
@@ -233,11 +233,16 @@
                                     <span class="text-[10px] text-slate-500">Replaces top text with your official logo</span>
                                 </div>
                             </div>
-                            <input type="file" accept="image/*" class="hidden" onchange="window.processSWLogo(this)">
-                            <span id="sw-logo-status" class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold">None</span>
-                        </label>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.clearSWLogo()" class="text-[10px] text-red-400 hover:text-red-300 font-bold px-2 py-1 bg-slate-900 rounded">Clear</button>
+                                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded font-bold text-xs text-white transition-colors">
+                                    <input type="file" accept="image/*" class="hidden" onchange="window.processSWLogo(this)">
+                                    <span id="sw-logo-status">Upload</span>
+                                </label>
+                            </div>
+                        </div>
 
-                        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer hover:border-sky-500 transition-all">
+                        <div class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl transition-all">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="briefcase" class="text-sky-400"></i>
                                 <div>
@@ -245,20 +250,30 @@
                                     <span class="text-[10px] text-slate-500">Appears in bottom right corner</span>
                                 </div>
                             </div>
-                            <input type="file" accept="image/*" class="hidden" onchange="window.processSponsorPhoto(this)">
-                            <span id="sponsor-status" class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold">None</span>
-                        </label>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.clearSponsor()" class="text-[10px] text-red-400 hover:text-red-300 font-bold px-2 py-1 bg-slate-900 rounded">Clear</button>
+                                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded font-bold text-xs text-white transition-colors">
+                                    <input type="file" accept="image/*" class="hidden" onchange="window.processSponsorPhoto(this)">
+                                    <span id="sponsor-status">Upload</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
                         <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-400"><i data-lucide="school"></i> Manage Schools</h2>
                         <div class="space-y-3">
                             <input id="new-school-name" type="text" placeholder="School Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none">
-                            <div class="flex items-center gap-4">
+                            <div class="flex flex-col md:flex-row gap-4">
                                 <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1">
                                     <i data-lucide="palette" class="text-slate-500" size="18"></i>
-                                    <span class="text-sm text-slate-400">Color</span>
+                                    <span class="text-sm text-slate-400">Primary Color</span>
                                     <input id="new-school-color" type="color" value="#0ea5e9" class="ml-auto w-8 h-8 rounded bg-transparent border-0 p-0">
+                                </div>
+                                <div class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex-1">
+                                    <i data-lucide="palette" class="text-slate-500" size="18"></i>
+                                    <span class="text-sm text-slate-400">Secondary Color</span>
+                                    <input id="new-school-color2" type="color" value="#ffffff" class="ml-auto w-8 h-8 rounded bg-transparent border-0 p-0">
                                 </div>
                             </div>
                             <button onclick="window.addNewSchool()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
@@ -341,41 +356,41 @@
         ];
 
         const DEFAULT_SCHOOLS = [
-            { id: '1', name: 'Abington Heights', color: '#0ea5e9', logo: null },
-            { id: '2', name: 'Blue Ridge', color: '#e11d48', logo: null },
-            { id: '3', name: 'Carbondale Area', color: '#dc2626', logo: null },
-            { id: '4', name: 'Crestwood', color: '#ea580c', logo: null },
-            { id: '5', name: 'Dallas', color: '#2563eb', logo: null },
-            { id: '6', name: 'Delaware Valley', color: '#16a34a', logo: null },
-            { id: '7', name: 'Dunmore', color: '#7c3aed', logo: null },
-            { id: '8', name: 'Elk Lake', color: '#059669', logo: null },
-            { id: '9', name: 'Hanover Area', color: '#2563eb', logo: null },
-            { id: '10', name: 'Hazleton Area', color: '#dc2626', logo: null },
-            { id: '11', name: 'Holy Cross', color: '#16a34a', logo: null },
-            { id: '12', name: 'Holy Redeemer', color: '#dc2626', logo: null },
-            { id: '13', name: 'Honesdale', color: '#0ea5e9', logo: null },
-            { id: '14', name: 'Lakeland', color: '#dc2626', logo: null },
-            { id: '15', name: 'Lake-Lehman', color: '#000000', logo: null },
-            { id: '16', name: 'Lackawanna Trail', color: '#ea580c', logo: null },
-            { id: '17', name: 'Mid Valley', color: '#2563eb', logo: null },
-            { id: '18', name: 'Montrose', color: '#e11d48', logo: null },
-            { id: '19', name: 'MMI Preparatory', color: '#000000', logo: null },
-            { id: '20', name: 'Nanticoke Area', color: '#0ea5e9', logo: null },
-            { id: '21', name: 'North Pocono', color: '#dc2626', logo: null },
-            { id: '22', name: 'Northwest Area', color: '#ea580c', logo: null },
-            { id: '23', name: 'Old Forge', color: '#2563eb', logo: null },
-            { id: '24', name: 'Pittston Area', color: '#dc2626', logo: null },
-            { id: '25', name: 'Riverside', color: '#e11d48', logo: null },
-            { id: '26', name: 'Scranton', color: '#dc2626', logo: null },
-            { id: '27', name: 'Scranton Preparatory', color: '#7c3aed', logo: null },
-            { id: '28', name: 'Susquehanna Community', color: '#2563eb', logo: null },
-            { id: '29', name: 'Valley View', color: '#059669', logo: null },
-            { id: '30', name: 'Wallenpaupack', color: '#7c3aed', logo: null },
-            { id: '31', name: 'West Scranton', color: '#2563eb', logo: null },
-            { id: '32', name: 'Wilkes-Barre Area', color: '#000000', logo: null },
-            { id: '33', name: 'Wyoming Area', color: '#16a34a', logo: null },
-            { id: '34', name: 'Wyoming Seminary', color: '#2563eb', logo: null },
-            { id: '35', name: 'Wyoming Valley West', color: '#e11d48', logo: null }
+            { id: '1', name: 'Abington Heights', color: '#0ea5e9', color2: '#ffffff', logo: null },
+            { id: '2', name: 'Blue Ridge', color: '#e11d48', color2: '#ffffff', logo: null },
+            { id: '3', name: 'Carbondale Area', color: '#dc2626', color2: '#1e3a8a', logo: null },
+            { id: '4', name: 'Crestwood', color: '#ea580c', color2: '#000000', logo: null },
+            { id: '5', name: 'Dallas', color: '#2563eb', color2: '#ffffff', logo: null },
+            { id: '6', name: 'Delaware Valley', color: '#16a34a', color2: '#facc15', logo: null },
+            { id: '7', name: 'Dunmore', color: '#7c3aed', color2: '#ffffff', logo: null },
+            { id: '8', name: 'Elk Lake', color: '#059669', color2: '#ffffff', logo: null },
+            { id: '9', name: 'Hanover Area', color: '#2563eb', color2: '#ffffff', logo: null },
+            { id: '10', name: 'Hazleton Area', color: '#dc2626', color2: '#ffffff', logo: null },
+            { id: '11', name: 'Holy Cross', color: '#16a34a', color2: '#ffffff', logo: null },
+            { id: '12', name: 'Holy Redeemer', color: '#dc2626', color2: '#facc15', logo: null },
+            { id: '13', name: 'Honesdale', color: '#0ea5e9', color2: '#ffffff', logo: null },
+            { id: '14', name: 'Lakeland', color: '#dc2626', color2: '#000000', logo: null },
+            { id: '15', name: 'Lake-Lehman', color: '#000000', color2: '#facc15', logo: null },
+            { id: '16', name: 'Lackawanna Trail', color: '#ea580c', color2: '#000000', logo: null },
+            { id: '17', name: 'Mid Valley', color: '#2563eb', color2: '#ffffff', logo: null },
+            { id: '18', name: 'Montrose', color: '#e11d48', color2: '#ffffff', logo: null },
+            { id: '19', name: 'MMI Preparatory', color: '#000000', color2: '#ffffff', logo: null },
+            { id: '20', name: 'Nanticoke Area', color: '#0ea5e9', color2: '#ffffff', logo: null },
+            { id: '21', name: 'North Pocono', color: '#dc2626', color2: '#000000', logo: null },
+            { id: '22', name: 'Northwest Area', color: '#ea580c', color2: '#000000', logo: null },
+            { id: '23', name: 'Old Forge', color: '#2563eb', color2: '#facc15', logo: null },
+            { id: '24', name: 'Pittston Area', color: '#dc2626', color2: '#ffffff', logo: null },
+            { id: '25', name: 'Riverside', color: '#e11d48', color2: '#ffffff', logo: null },
+            { id: '26', name: 'Scranton', color: '#dc2626', color2: '#facc15', logo: null },
+            { id: '27', name: 'Scranton Preparatory', color: '#7c3aed', color2: '#facc15', logo: null },
+            { id: '28', name: 'Susquehanna Community', color: '#2563eb', color2: '#ffffff', logo: null },
+            { id: '29', name: 'Valley View', color: '#059669', color2: '#facc15', logo: null },
+            { id: '30', name: 'Wallenpaupack', color: '#7c3aed', color2: '#ffffff', logo: null },
+            { id: '31', name: 'West Scranton', color: '#2563eb', color2: '#ffffff', logo: null },
+            { id: '32', name: 'Wilkes-Barre Area', color: '#000000', color2: '#dc2626', logo: null },
+            { id: '33', name: 'Wyoming Area', color: '#16a34a', color2: '#facc15', logo: null },
+            { id: '34', name: 'Wyoming Seminary', color: '#2563eb', color2: '#ffffff', logo: null },
+            { id: '35', name: 'Wyoming Valley West', color: '#e11d48', color2: '#0ea5e9', logo: null }
         ];
 
         const DEFAULT_RUNNER_UPS = [
@@ -388,10 +403,14 @@
         // --- State Variables ---
         let meets = JSON.parse(localStorage.getItem('sw_meets')) || [];
         let schools = JSON.parse(localStorage.getItem('sw_schools')) || DEFAULT_SCHOOLS;
+        
+        // Ensure old school formats have color2
+        schools.forEach(s => { if (!s.color2) s.color2 = '#020617'; });
+
         let results = JSON.parse(localStorage.getItem('sw_results')) || [];
         let history = JSON.parse(localStorage.getItem('sw_history')) || [];
         
-        let editingId = null; // Tracks if we are overwriting an existing record
+        let editingId = null; 
         let gStyle = 'classic', gType = 'individual', gPhoto = null;
         let gSponsor = localStorage.getItem('sw_sponsor_logo') || null;
         let gSwLogo = localStorage.getItem('sw_custom_logo') || null;
@@ -459,6 +478,7 @@
 
         // Hex to RGBA helper for blending school colors
         const hexToRgba = (hex, alpha) => {
+            if (!hex) return `rgba(0,0,0,${alpha})`;
             let r=0,g=0,b=0;
             if(hex.length===4){r=parseInt(hex[1]+hex[1],16);g=parseInt(hex[2]+hex[2],16);b=parseInt(hex[3]+hex[3],16);}
             else if(hex.length===7){r=parseInt(hex.slice(1,3),16);g=parseInt(hex.slice(3,5),16);b=parseInt(hex.slice(5,7),16);}
@@ -555,9 +575,11 @@
 
         // --- Schools Logic ---
         window.addNewSchool = () => {
-            const n = document.getElementById('new-school-name').value, c = document.getElementById('new-school-color').value;
+            const n = document.getElementById('new-school-name').value;
+            const c1 = document.getElementById('new-school-color').value;
+            const c2 = document.getElementById('new-school-color2').value;
             if(!n) return;
-            schools.push({ id: Date.now().toString(), name: n, color: c, logo: null });
+            schools.push({ id: Date.now().toString(), name: n, color: c1, color2: c2, logo: null });
             saveData();
             document.getElementById('new-school-name').value='';
             renderSchools(); window.updateSelects();
@@ -575,9 +597,9 @@
             if (s) { s.logo = url; saveData(); renderSchools(); window.updateSelects(); window.draw(); }
         };
         
-        window.updateSchoolColor = (id, v) => { 
+        window.updateSchoolColor = (id, field, v) => { 
             const s = schools.find(x => x.id === id);
-            if (s) { s.color = v; saveData(); renderSchools(); window.draw(); }
+            if (s) { s[field] = v; saveData(); renderSchools(); window.draw(); }
         };
 
         function renderSchools() {
@@ -591,7 +613,8 @@
                             <span class="font-bold text-sm block text-white">${s.name}</span>
                             <div class="flex items-center gap-2 mt-1">
                                 <label class="text-[10px] font-black text-sky-400 uppercase cursor-pointer hover:underline">Upload Logo<input type="file" class="hidden" onchange="window.handleLogoUpload('${s.id}', this)"></label>
-                                <input type="color" value="${s.color||'#ffffff'}" onchange="window.updateSchoolColor('${s.id}', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
+                                <input type="color" title="Primary Color" value="${s.color||'#ffffff'}" onchange="window.updateSchoolColor('${s.id}', 'color', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
+                                <input type="color" title="Secondary Color" value="${s.color2||'#020617'}" onchange="window.updateSchoolColor('${s.id}', 'color2', this.value)" class="w-4 h-4 rounded-full bg-transparent border-0 p-0 cursor-pointer">
                             </div>
                         </div>
                     </div>
@@ -627,10 +650,23 @@
             document.getElementById('sw-logo-status').innerText="Loaded ✅"; 
             window.draw(); 
         };
+        window.clearSWLogo = () => {
+            gSwLogo = null;
+            localStorage.removeItem('sw_custom_logo');
+            document.getElementById('sw-logo-status').innerText="Upload"; 
+            window.draw(); 
+        };
+
         window.processSponsorPhoto = async (i) => { 
             gSponsor = await compress(i.files[0], 500, true); 
             localStorage.setItem('sw_sponsor_logo', gSponsor);
             document.getElementById('sponsor-status').innerText="Loaded ✅"; 
+            window.draw(); 
+        };
+        window.clearSponsor = () => {
+            gSponsor = null;
+            localStorage.removeItem('sw_sponsor_logo');
+            document.getElementById('sponsor-status').innerText="Upload"; 
             window.draw(); 
         };
 
@@ -714,12 +750,12 @@
                 return;
             }
 
-            editingId = id; // Track the ID being edited
+            editingId = id; 
             document.getElementById('edit-mode-banner').classList.remove('hidden');
 
             let s = item.state;
 
-            // Backward compatibility for older records saved before the 'state' object existed
+            // Backward compatibility for older records
             if (!s) {
                 const legacyData = item.data || item;
                 const matchedSchool = schools.find(sc => sc.name === legacyData.schoolName);
@@ -778,9 +814,9 @@
             const mark = document.getElementById('gen-mark').value;
             const record = document.getElementById('gen-record').value;
             
-            // Dual Colors: School Color + SportzWire Blue (#0ea5e9)
-            const sColor = school ? (school.color || '#0ea5e9') : '#0ea5e9';
-            const swBlue = '#0ea5e9'; 
+            // Dual Colors: School Primary and Secondary
+            const sColor1 = school ? (school.color || '#0ea5e9') : '#0ea5e9';
+            const sColor2 = school ? (school.color2 || '#020617') : '#020617'; 
 
             const activeRUs = runnerUps.filter(x=>x.schoolId && x.mark);
 
@@ -790,26 +826,47 @@
 
             ctx.clearRect(0,0,w,h);
             
+            // Helper to draw photo smartly contained inside a box
+            const drawSmartPhoto = (img, x, y, boxW, boxH) => {
+                ctx.save();
+                // Blur Background fill
+                ctx.beginPath(); ctx.roundRect(x,y,boxW,boxH, gStyle==='poster'?0:20); ctx.fill(); ctx.clip();
+                ctx.filter = 'blur(15px)';
+                ctx.drawImage(img, x-20, y-20, boxW+40, boxH+40);
+                ctx.filter = 'none';
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(x,y,boxW,boxH);
+
+                // Fit Photo (Contain, anchored slightly towards top)
+                const scale = Math.min(boxW / img.width, boxH / img.height);
+                const fitW = img.width * scale;
+                const fitH = img.height * scale;
+                // Offset Y slightly top-weighted for team photos
+                const offsetY = (boxH - fitH) * 0.2; 
+                ctx.drawImage(img, x + (boxW - fitW)/2, y + offsetY, fitW, fitH);
+                ctx.restore();
+            };
+
             if (gStyle === 'classic') {
                 const grad = ctx.createLinearGradient(0,0,0,h);
-                grad.addColorStop(0,'#020617'); 
-                grad.addColorStop(0.5, hexToRgba(sColor, 0.4)); // blend team color
-                grad.addColorStop(1,'#020617');
+                grad.addColorStop(0, sColor2); 
+                grad.addColorStop(0.4, hexToRgba(sColor1, 0.5)); 
+                grad.addColorStop(1, '#020617');
                 ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
                 
-                if(sLogo){ ctx.globalAlpha=0.1; ctx.drawImage(sLogo,300,300,900,900); ctx.globalAlpha=1.0; }
+                if(sLogo){ ctx.globalAlpha=0.15; ctx.drawImage(sLogo,300,300,900,900); ctx.globalAlpha=1.0; }
                 
-                // SportzWire Banner overlay mixed with team color
-                ctx.fillStyle=hexToRgba(swBlue, 0.15); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
+                // SportzWire Banner overlay
+                ctx.fillStyle=hexToRgba(sColor2, 0.6); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
                 
                 if (swLogoImg) {
-                    const lH = 65; const lW = swLogoImg.width * (lH / swLogoImg.height);
-                    ctx.drawImage(swLogoImg, 40, 35, lW, lH);
+                    const lH = 100; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    ctx.drawImage(swLogoImg, 40, 20, lW, lH);
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 55px sans-serif'; ctx.textAlign='left'; ctx.fillText('SPORTZWIRE',40,85);
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 80px sans-serif'; ctx.textAlign='left'; ctx.fillText('SPORTZWIRE',40,95);
                 }
                 
-                if(meet){ ctx.fillStyle='#9cb9d1'; ctx.font='bold 24px sans-serif'; ctx.textAlign='right'; ctx.fillText(meet.name.toUpperCase(),1040,65); }
+                if(meet){ ctx.fillStyle='#e2e8f0'; ctx.font='bold 24px sans-serif'; ctx.textAlign='right'; ctx.fillText(meet.name.toUpperCase(),1040,65); }
 
                 // Dynamic vertical spacing to prevent overlap
                 let maxPH = 540;
@@ -819,17 +876,17 @@
                 let y = 160;
                 if (pImg) {
                     ctx.save(); ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=30;
-                    ctx.beginPath(); ctx.roundRect(60,160,960,maxPH,20); ctx.fill(); ctx.clip();
-                    let dW, dH; const iA=pImg.width/pImg.height, tA=960/maxPH;
-                    if(iA>tA){ dH=maxPH; dW=maxPH*iA; } else { dW=960; dH=960/iA; }
-                    ctx.drawImage(pImg,60+(960-dW)/2,160+(maxPH-dH)/2,dW,dH);
+                    ctx.beginPath(); ctx.roundRect(60,160,960,maxPH,20); ctx.fill(); 
                     ctx.restore();
-                    ctx.strokeStyle=sColor; ctx.lineWidth=10; ctx.strokeRect(60,160,960,maxPH);
+
+                    drawSmartPhoto(pImg, 60, 160, 960, maxPH);
+                    
+                    ctx.strokeStyle=sColor1; ctx.lineWidth=10; ctx.strokeRect(60,160,960,maxPH);
                     y = 160+maxPH+50;
                 } else { y = 350; }
 
                 ctx.textAlign='center';
-                if(event){ ctx.fillStyle='#9cb9d1'; ctx.font='900 italic 45px sans-serif'; ctx.fillText(event.toUpperCase(),w/2,y, 900); y+=60; }
+                if(event){ ctx.fillStyle=sColor1; ctx.font='900 italic 45px sans-serif'; ctx.fillText(event.toUpperCase(),w/2,y, 900); y+=60; }
                 const name = gType==='individual'?athlete:(school?school.name:'');
                 if(name){ ctx.fillStyle='#fff'; ctx.font='bold 80px sans-serif'; ctx.fillText(name.toUpperCase(),w/2,y, 960); y+=70; }
 
@@ -850,19 +907,20 @@
                         ctx.fillStyle='#facc15'; ctx.textAlign='right'; ctx.fillText(ru.mark,960,y, 200); y+=70;
                     });
                 }
+
             } else if (gStyle === 'splash') {
                 ctx.fillStyle='#0f0a0a'; ctx.fillRect(0,0,w,h);
                 
                 ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=12;
                 for(let i=0; i<8; i++){ ctx.beginPath(); ctx.moveTo(100+(i*120),0); ctx.lineTo(-400+(i*280),h); ctx.stroke(); }
 
-                ctx.fillStyle=hexToRgba(sColor, 0.3); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
+                ctx.fillStyle=hexToRgba(sColor2, 0.4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
                 
                 if (swLogoImg) {
-                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
-                    ctx.drawImage(swLogoImg, w/2 - lW/2, 20, lW, lH);
+                    const lH = 120; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    ctx.drawImage(swLogoImg, w/2 - lW/2, 10, lW, lH);
                 } else {
-                    ctx.fillStyle='#fff'; ctx.font='900 italic 80px sans-serif'; ctx.textAlign='center'; ctx.fillText('SPORTZWIRE', w/2, 100);
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 100px sans-serif'; ctx.textAlign='center'; ctx.fillText('SPORTZWIRE', w/2, 110);
                 }
 
                 // Dynamic max photo height
@@ -871,26 +929,25 @@
 
                 if(pImg){
                     ctx.save(); ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=50;
-                    ctx.beginPath(); ctx.roundRect(100,160,880,maxPH,0); ctx.fill(); ctx.clip();
-                    let dW, dH; const iA=pImg.width/pImg.height, tA=880/maxPH;
-                    if(iA>tA){ dH=maxPH; dW=maxPH*iA; } else { dW=880; dH=880/iA; }
-                    ctx.drawImage(pImg, 100+(880-dW)/2, 160+(maxPH-dH)/2, dW, dH);
+                    ctx.beginPath(); ctx.roundRect(100,160,880,maxPH,0); ctx.fill(); 
                     ctx.restore();
                     
-                    ctx.strokeStyle=sColor; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(100,160+maxPH); ctx.lineTo(980,160+maxPH); ctx.stroke();
+                    drawSmartPhoto(pImg, 100, 160, 880, maxPH);
+                    
+                    ctx.strokeStyle=sColor1; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(100,160+maxPH); ctx.lineTo(980,160+maxPH); ctx.stroke();
                     ctx.globalAlpha=0.3; ctx.lineWidth=24; ctx.stroke(); ctx.globalAlpha=1.0;
                 }
 
                 let y = pImg ? 160 + maxPH + 70 : 400;
                 ctx.textAlign='center';
-                if(event){ ctx.fillStyle=sColor; ctx.font='900 italic 55px sans-serif'; ctx.fillText(event.toUpperCase(), w/2, y, 900); y+=65; }
+                if(event){ ctx.fillStyle=sColor1; ctx.font='900 italic 55px sans-serif'; ctx.fillText(event.toUpperCase(), w/2, y, 900); y+=65; }
                 const n = gType==='individual'?athlete:(school?school.name:'');
                 if(n){ ctx.fillStyle='#fff'; ctx.font='bold 75px sans-serif'; ctx.fillText(n.toUpperCase(), w/2, y, 960); y+=85; }
 
                 if(mark){
                     const lS=160, mW=Math.min(ctx.measureText(mark).width, 500);
                     let x = (w-(mW+(sLogo?lS+40:0)))/2;
-                    if(sLogo){ ctx.shadowColor=sColor; ctx.shadowBlur=30; ctx.drawImage(sLogo, x, y-130, lS, lS); ctx.shadowBlur=0; x+=lS+40; }
+                    if(sLogo){ ctx.shadowColor=sColor1; ctx.shadowBlur=30; ctx.drawImage(sLogo, x, y-130, lS, lS); ctx.shadowBlur=0; x+=lS+40; }
                     ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.font='900 italic 130px sans-serif'; ctx.fillText(mark, x, y, 500); y+=60;
                 }
 
@@ -904,34 +961,36 @@
                         ctx.textAlign='left'; y+=50;
                     });
                 }
+
             } else if (gStyle === 'poster') {
-                // Ensure room for leaderboard 1350 Canvas height
-                // Leaderboard starts at 1020, leaves 330px for 5 lines.
-                const splitY = 750;
+                // Shifted layout up slightly to absolutely ensure no overlaps
+                const splitY = 650;
                 ctx.fillStyle = '#0f0a0a'; ctx.fillRect(0, 0, w, h);
 
                 if (pImg) {
-                    const targetH = splitY + 50; const iA = pImg.width / pImg.height; const tA = w / targetH;
-                    let sX = 0, sY = 0, sW = pImg.width, sH = pImg.height;
-                    if (iA > tA) { sW = pImg.height * tA; sX = (pImg.width - sW) / 2; } else { sH = pImg.width / tA; sY = 0; }
-                    ctx.drawImage(pImg, sX, sY, sW, sH, 0, 0, w, targetH);
+                    drawSmartPhoto(pImg, 0, 0, w, splitY + 50);
                 } else {
                     ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, w, splitY + 50);
                 }
 
                 // SW custom logo top overlay
                 if (swLogoImg) {
-                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    const lH = 120; const lW = swLogoImg.width * (lH / swLogoImg.height);
                     ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
-                    ctx.drawImage(swLogoImg, w/2 - lW/2, 40, lW, lH);
+                    ctx.drawImage(swLogoImg, w/2 - lW/2, 20, lW, lH);
+                    ctx.shadowBlur=0;
+                } else {
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 100px sans-serif'; ctx.textAlign='center'; 
+                    ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
+                    ctx.fillText('SPORTZWIRE', w/2, 110);
                     ctx.shadowBlur=0;
                 }
 
-                // Dual gradient using school color and SportzWire Blue
-                ctx.fillStyle = sColor; ctx.fillRect(0, splitY, w, h - splitY);
+                // Dual gradient using school Primary and Secondary colors
+                ctx.fillStyle = sColor1; ctx.fillRect(0, splitY, w, h - splitY);
                 const bGrad = ctx.createLinearGradient(0, splitY, 0, h);
-                bGrad.addColorStop(0, 'rgba(0,0,0,0.1)'); 
-                bGrad.addColorStop(1, hexToRgba(swBlue, 0.9)); // Blend to SW Blue
+                bGrad.addColorStop(0, 'rgba(0,0,0,0.2)'); 
+                bGrad.addColorStop(1, hexToRgba(sColor2, 0.95));
                 ctx.fillStyle = bGrad; ctx.fillRect(0, splitY, w, h - splitY);
 
                 ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.font = '900 240px "Impact", "Arial Black", sans-serif';
@@ -944,13 +1003,13 @@
 
                 ctx.fillStyle = '#ffffff'; ctx.font = '900 140px "Impact", "Arial Black", sans-serif';
                 ctx.textAlign = 'center'; ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5;
-                ctx.fillText('CHAMPIONS', w / 2, splitY + 180); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                ctx.fillText('CHAMPIONS', w / 2, splitY + 160); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
                 ctx.fillStyle = '#e2e8f0'; ctx.font = '900 32px sans-serif';
                 const meetText = meet?.name || 'TRACK MEET'; const evtText = event || 'EVENT';
-                ctx.fillText(`${meetText}  •  ${evtText}`.toUpperCase(), w / 2, splitY + 240, 960);
+                ctx.fillText(`${meetText}  •  ${evtText}`.toUpperCase(), w / 2, splitY + 220, 960);
 
-                let startY = splitY + 270;
+                let startY = splitY + 260;
                 const validItems = [{ place: '1st', schoolId: school?.id, mark: mark, logo: sLogo }].concat(ruData).filter(item => item.schoolId || item.mark || (item.place === '1st' && athlete));
                 
                 if (validItems.length > 0) {
@@ -973,13 +1032,15 @@
                 }
             }
 
+            // Universal Elements applied to all styles
             if (record !== 'None') {
                 ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.roundRect(40, 140, 320, 65, 12); ctx.fill();
                 ctx.fillStyle='#fff'; ctx.font='bold 32px sans-serif'; ctx.textAlign='center'; ctx.fillText(record.toUpperCase(),200,182);
             }
             if (spLogo) {
+                // Shifted slightly to ensure it avoids text borders
                 const sW=180, sH=sW*(spLogo.height/spLogo.width);
-                ctx.drawImage(spLogo, w-sW-40, h-sH-30, sW, sH);
+                ctx.drawImage(spLogo, w-sW-40, h-sH-40, sW, sH);
             }
             window.updateCaption();
         };
