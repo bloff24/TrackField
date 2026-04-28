@@ -78,11 +78,11 @@
                     <i data-lucide="history" size="20"></i> History
                 </button>
                 <button onclick="window.switchTab('schools')" class="nav-btn w-full py-3 px-4 flex items-center gap-3 rounded-lg font-bold transition-all btn-inactive" data-tab="schools">
-                    <i data-lucide="school" size="20"></i> School Admin
+                    <i data-lucide="settings" size="20"></i> Admin / Config
                 </button>
             </nav>
             <div class="p-4 border-t border-slate-800 text-center space-y-3">
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v2.5</span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest block">SportzWire Engine v2.7</span>
                 <button onclick="window.handleLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors uppercase tracking-wider"><i data-lucide="log-out" class="inline mb-0.5" size="12"></i> Lock App</button>
             </div>
         </aside>
@@ -118,6 +118,12 @@
 
                 <!-- TAB: GENERATOR -->
                 <section id="tab-generator" class="tab-content animate-in fade-in space-y-6">
+                    <!-- Edit Mode Banner -->
+                    <div id="edit-mode-banner" class="hidden bg-sky-900/50 border border-sky-500 text-sky-200 p-3 rounded-xl flex justify-between items-center font-bold text-sm">
+                        <span><i data-lucide="edit-3" class="inline mb-1 mr-2" size="16"></i> Editing Past Record</span>
+                        <button onclick="window.clearGenerator()" class="text-white hover:text-red-400 bg-slate-900 px-3 py-1 rounded">Cancel Edit</button>
+                    </div>
+
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
                         <h2 class="text-xl font-bold flex items-center gap-2 border-b border-slate-800 pb-3 text-purple-400"><i data-lucide="camera"></i> Create Graphic</h2>
                         
@@ -144,7 +150,7 @@
                         </div>
 
                         <div class="space-y-3">
-                            <input id="gen-athlete" type="text" placeholder="Athlete Name" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold">
+                            <input id="gen-athlete" type="text" placeholder="Athlete Name (Optional for Teams)" oninput="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 font-bold">
                             <select id="gen-school" onchange="window.draw()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500"></select>
                         </div>
 
@@ -168,19 +174,13 @@
                             <span id="photo-status" class="block font-bold text-white">Upload Podium / Team Photo</span>
                             <input type="file" accept="image/*" class="hidden" onchange="window.processPodiumPhoto(this)">
                         </label>
-
-                        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer">
-                            <div class="flex items-center gap-3">
-                                <i data-lucide="briefcase" class="text-sky-400"></i>
-                                <span class="text-sm font-bold text-white">Sponsor Logo</span>
-                            </div>
-                            <input type="file" accept="image/*" class="hidden" onchange="window.processSponsorPhoto(this)">
-                            <span id="sponsor-status" class="text-xs bg-slate-800 px-2 py-1 rounded">None</span>
-                        </label>
                     </div>
 
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
-                        <h3 class="text-xs font-black text-slate-500 uppercase">Live Preview</h3>
+                        <h3 class="text-xs font-black text-slate-500 uppercase flex justify-between items-center">
+                            Live Preview
+                            <button onclick="window.clearGenerator()" class="text-slate-400 hover:text-white transition-colors">Clear</button>
+                        </h3>
                         <div class="relative flex justify-center bg-black rounded-lg overflow-hidden border border-slate-800 shadow-2xl">
                             <canvas id="main-canvas" style="max-height: 600px; object-fit: contain; width: 100%;"></canvas>
                         </div>
@@ -194,16 +194,19 @@
                         </div>
 
                         <button onclick="window.generateAndSave()" class="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-3">
-                            <i data-lucide="save"></i> Save & Download Graphic
+                            <i data-lucide="save"></i> Save & Record Data
                         </button>
                     </div>
                 </section>
 
                 <!-- TAB: RESULTS -->
                 <section id="tab-results" class="tab-content animate-in fade-in space-y-6">
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex items-center gap-2 text-yellow-400">
-                        <i data-lucide="clipboard-list"></i>
-                        <h2 class="text-xl font-bold text-white">Results Ledger</h2>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-yellow-400">
+                            <i data-lucide="clipboard-list"></i>
+                            <h2 class="text-xl font-bold text-white">Results Ledger</h2>
+                        </div>
+                        <span class="text-xs text-slate-500 italic">Click Edit to modify past records</span>
                     </div>
                     <div id="results-list" class="space-y-6"></div>
                 </section>
@@ -217,8 +220,36 @@
                     <div id="history-grid" class="grid grid-cols-1 gap-4"></div>
                 </section>
 
-                <!-- TAB: SCHOOLS -->
+                <!-- TAB: SCHOOLS / CONFIG -->
                 <section id="tab-schools" class="tab-content animate-in fade-in space-y-6">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-sky-400"><i data-lucide="settings"></i> Global Settings</h2>
+                        
+                        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer hover:border-sky-500 transition-all">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="image" class="text-sky-400"></i>
+                                <div>
+                                    <span class="text-sm font-bold text-white block">SportzWire Brand Logo</span>
+                                    <span class="text-[10px] text-slate-500">Replaces top text with your official logo</span>
+                                </div>
+                            </div>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.processSWLogo(this)">
+                            <span id="sw-logo-status" class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold">None</span>
+                        </label>
+
+                        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-xl cursor-pointer hover:border-sky-500 transition-all">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="briefcase" class="text-sky-400"></i>
+                                <div>
+                                    <span class="text-sm font-bold text-white block">Sponsor Logo</span>
+                                    <span class="text-[10px] text-slate-500">Appears in bottom right corner</span>
+                                </div>
+                            </div>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.processSponsorPhoto(this)">
+                            <span id="sponsor-status" class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold">None</span>
+                        </label>
+                    </div>
+
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
                         <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-400"><i data-lucide="school"></i> Manage Schools</h2>
                         <div class="space-y-3">
@@ -236,7 +267,7 @@
                         </div>
                         <div class="pt-4 border-t border-slate-800">
                             <label class="block w-full bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-800 transition-all">
-                                <i data-lucide="image" class="mx-auto text-emerald-400 mb-1"></i>
+                                <i data-lucide="folder-up" class="mx-auto text-emerald-400 mb-1"></i>
                                 <span class="text-sm font-bold block text-slate-200">Bulk Folder Upload</span>
                                 <span class="text-[10px] text-slate-500 block mt-1">Match logos to school names automatically</span>
                                 <input type="file" multiple webkitdirectory="true" class="hidden" onchange="window.handleBulkLogos(this)">
@@ -264,12 +295,12 @@
                 <i data-lucide="history" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Hist</span>
             </button>
             <button onclick="window.switchTab('schools')" class="nav-btn py-4 px-2 flex-1 flex flex-col items-center gap-1 btn-inactive" data-tab="schools">
-                <i data-lucide="school" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Schools</span>
+                <i data-lucide="settings" size="20"></i><span class="text-[10px] font-bold uppercase tracking-widest">Admin</span>
             </button>
         </nav>
     </div>
 
-    <!-- Application Script (NO FIREBASE REQUIRED) -->
+    <!-- Application Script (Local Storage) -->
     <script>
         // --- Authentication Logic ---
         const APP_PASSCODE = "sportzwire26";
@@ -347,20 +378,27 @@
             { id: '35', name: 'Wyoming Valley West', color: '#e11d48', logo: null }
         ];
 
-        // --- Local Storage Initialization ---
-        let meets = JSON.parse(localStorage.getItem('sw_meets')) || [];
-        let schools = JSON.parse(localStorage.getItem('sw_schools')) || DEFAULT_SCHOOLS;
-        let results = JSON.parse(localStorage.getItem('sw_results')) || [];
-        let history = JSON.parse(localStorage.getItem('sw_history')) || [];
-        
-        let gStyle = 'classic', gType = 'individual', gPhoto = null, gSponsor = null;
-        let runnerUps = [
+        const DEFAULT_RUNNER_UPS = [
             { place: '2nd', schoolId: '', mark: '' },
             { place: '3rd', schoolId: '', mark: '' },
             { place: '4th', schoolId: '', mark: '' },
             { place: '5th', schoolId: '', mark: '' }
         ];
 
+        // --- State Variables ---
+        let meets = JSON.parse(localStorage.getItem('sw_meets')) || [];
+        let schools = JSON.parse(localStorage.getItem('sw_schools')) || DEFAULT_SCHOOLS;
+        let results = JSON.parse(localStorage.getItem('sw_results')) || [];
+        let history = JSON.parse(localStorage.getItem('sw_history')) || [];
+        
+        let editingId = null; // Tracks if we are overwriting an existing record
+        let gStyle = 'classic', gType = 'individual', gPhoto = null;
+        let gSponsor = localStorage.getItem('sw_sponsor_logo') || null;
+        let gSwLogo = localStorage.getItem('sw_custom_logo') || null;
+
+        let runnerUps = JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
+
+        // Syncs local variables to localStorage
         function saveData() {
             localStorage.setItem('sw_meets', JSON.stringify(meets));
             localStorage.setItem('sw_schools', JSON.stringify(schools));
@@ -368,6 +406,7 @@
             localStorage.setItem('sw_history', JSON.stringify(history));
         }
 
+        // Initialize UI components
         function startSync() {
             renderMeets(); 
             renderSchools(); 
@@ -376,10 +415,15 @@
             window.updateSelects(); 
             window.updateStyleUI(); 
             window.updateTypeUI();
+
+            if (gSwLogo) document.getElementById('sw-logo-status').innerText = 'Loaded ✅';
+            if (gSponsor) document.getElementById('sponsor-status').innerText = 'Loaded ✅';
+
             if(window.lucide) window.lucide.createIcons();
+            window.draw();
         }
 
-        // --- Global Methods ---
+        // --- Global Helpers ---
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
             document.getElementById(`tab-${id}`).classList.add('active');
@@ -412,6 +456,14 @@
         };
 
         window.hideError = () => document.getElementById('error-banner').classList.add('hidden');
+
+        // Hex to RGBA helper for blending school colors
+        const hexToRgba = (hex, alpha) => {
+            let r=0,g=0,b=0;
+            if(hex.length===4){r=parseInt(hex[1]+hex[1],16);g=parseInt(hex[2]+hex[2],16);b=parseInt(hex[3]+hex[3],16);}
+            else if(hex.length===7){r=parseInt(hex.slice(1,3),16);g=parseInt(hex.slice(3,5),16);b=parseInt(hex.slice(5,7),16);}
+            return `rgba(${r},${g},${b},${alpha})`;
+        };
 
         async function compress(file, max, isLogo=false) {
             return new Promise(res => {
@@ -568,6 +620,20 @@
             }
         };
 
+        // --- Custom Global Logos ---
+        window.processSWLogo = async (i) => { 
+            gSwLogo = await compress(i.files[0], 800, true); 
+            localStorage.setItem('sw_custom_logo', gSwLogo);
+            document.getElementById('sw-logo-status').innerText="Loaded ✅"; 
+            window.draw(); 
+        };
+        window.processSponsorPhoto = async (i) => { 
+            gSponsor = await compress(i.files[0], 500, true); 
+            localStorage.setItem('sw_sponsor_logo', gSponsor);
+            document.getElementById('sponsor-status').innerText="Loaded ✅"; 
+            window.draw(); 
+        };
+
         // --- Generator Logic ---
         window.setStyle = (s) => { gStyle=s; window.updateStyleUI(); window.draw(); };
         window.setEventType = (t) => { gType=t; window.updateTypeUI(); window.draw(); };
@@ -588,13 +654,21 @@
         };
 
         window.updateSelects = () => {
+            const currentMeetId = document.getElementById('gen-meet').value;
+            const currentSchoolId = document.getElementById('gen-school').value;
+
             document.getElementById('gen-meet').innerHTML = '<option value="">Select Meet...</option>' + meets.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
             document.getElementById('gen-school').innerHTML = '<option value="">Select School...</option>' + schools.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
+            
+            // Restore selection if valid
+            if (meets.find(m => m.id === currentMeetId)) document.getElementById('gen-meet').value = currentMeetId;
+            if (schools.find(s => s.id === currentSchoolId)) document.getElementById('gen-school').value = currentSchoolId;
+
             document.getElementById('runner-ups-container').innerHTML = runnerUps.map((ru, i)=>`
                 <div class="flex gap-2 items-center">
                     <span class="text-[10px] font-black text-slate-500 w-6">${ru.place}</span>
                     <select onchange="window.updateRU(${i},'schoolId',this.value)" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none">
-                        <option value="">School...</option>${schools.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}
+                        <option value="">School...</option>${schools.map(x=>`<option value="${x.id}" ${ru.schoolId === x.id ? 'selected' : ''}>${x.name}</option>`).join('')}
                     </select>
                     <input type="text" placeholder="Mark" value="${ru.mark}" oninput="window.updateRU(${i},'mark',this.value)" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none">
                 </div>
@@ -603,15 +677,72 @@
 
         window.updateGenEvents = () => {
             const m = meets.find(x=>x.id===document.getElementById('gen-meet').value), e = document.getElementById('gen-event');
-            if(m) e.innerHTML = m.events.map(x=>`<option value="${x}">${x}</option>`).join('');
+            if(m) {
+                const currentEvent = e.value;
+                e.innerHTML = '<option value="">Select Event...</option>' + m.events.map(x=>`<option value="${x}">${x}</option>`).join('');
+                if (m.events.includes(currentEvent)) e.value = currentEvent;
+            }
             window.draw();
         };
 
         window.updateRU = (idx, f, v) => { runnerUps[idx][f]=v; window.draw(); };
         window.processPodiumPhoto = async (i) => { gPhoto = await compress(i.files[0], 1080); document.getElementById('photo-status').innerText="Ready ✅"; window.draw(); };
-        window.processSponsorPhoto = async (i) => { gSponsor = await compress(i.files[0], 500, true); document.getElementById('sponsor-status').innerText="✅"; window.draw(); };
+        
+        window.clearGenerator = () => {
+            editingId = null;
+            document.getElementById('edit-mode-banner').classList.add('hidden');
 
-        const canvas = document.getElementById('main-canvas'), ctx = canvas.getContext('2d');
+            document.getElementById('gen-meet').value = '';
+            document.getElementById('gen-event').value = '';
+            document.getElementById('gen-athlete').value = '';
+            document.getElementById('gen-school').value = '';
+            document.getElementById('gen-mark').value = '';
+            document.getElementById('gen-record').value = 'None';
+            runnerUps = JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
+            gPhoto = null;
+            document.getElementById('photo-status').innerText="Upload Podium / Team Photo";
+            window.updateSelects();
+            window.draw();
+        };
+
+        window.loadState = (id, source) => {
+            const sourceArr = source === 'results' ? results : history;
+            const item = sourceArr.find(x => x.id === id);
+            
+            if (!item || !item.state) {
+                window.showError("Legacy record format. Cannot load into editor.");
+                return;
+            }
+
+            editingId = id; // Track the ID being edited
+            document.getElementById('edit-mode-banner').classList.remove('hidden');
+
+            const s = item.state;
+            gStyle = s.style || 'classic';
+            gType = s.type || 'individual';
+            gPhoto = s.photo || null;
+            if(gPhoto) document.getElementById('photo-status').innerText="Ready ✅";
+            
+            runnerUps = s.runnerUps ? JSON.parse(JSON.stringify(s.runnerUps)) : JSON.parse(JSON.stringify(DEFAULT_RUNNER_UPS));
+
+            document.getElementById('gen-meet').value = s.meetId || '';
+            window.updateGenEvents(); 
+            document.getElementById('gen-event').value = s.event || '';
+            document.getElementById('gen-athlete').value = s.athlete || '';
+            document.getElementById('gen-school').value = s.schoolId || '';
+            document.getElementById('gen-mark').value = s.mark || '';
+            document.getElementById('gen-record').value = s.record || 'None';
+            
+            window.updateStyleUI();
+            window.updateTypeUI();
+            window.updateSelects();
+            window.switchTab('generator');
+            window.showSuccess("Record loaded into editor.");
+        };
+
+
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d');
 
         window.draw = async () => {
             const w = 1080;
@@ -624,58 +755,77 @@
             const athlete = document.getElementById('gen-athlete').value;
             const mark = document.getElementById('gen-mark').value;
             const record = document.getElementById('gen-record').value;
-            const sColor = school ? school.color : '#0ea5e9';
+            
+            // Dual Colors: School Color + SportzWire Blue (#0ea5e9)
+            const sColor = school ? (school.color || '#0ea5e9') : '#0ea5e9';
+            const swBlue = '#0ea5e9'; 
+
             const activeRUs = runnerUps.filter(x=>x.schoolId && x.mark);
 
             const load = src => new Promise(r => { if(!src) r(null); else { const i=new Image(); i.crossOrigin="anonymous"; i.onload=()=>r(i); i.src=src; }});
-            const [pImg, sLogo, spLogo] = await Promise.all([load(gPhoto), load(school?.logo), load(gSponsor)]);
+            const [pImg, sLogo, spLogo, swLogoImg] = await Promise.all([load(gPhoto), load(school?.logo), load(gSponsor), load(gSwLogo)]);
             const ruData = await Promise.all(activeRUs.map(async x=>({...x, logo: await load(schools.find(s=>s.id===x.schoolId)?.logo)})));
 
             ctx.clearRect(0,0,w,h);
             
             if (gStyle === 'classic') {
                 const grad = ctx.createLinearGradient(0,0,0,h);
-                grad.addColorStop(0,'#020617'); grad.addColorStop(0.5,'#0a1930'); grad.addColorStop(1,'#020617');
+                grad.addColorStop(0,'#020617'); 
+                grad.addColorStop(0.5, hexToRgba(sColor, 0.4)); // blend team color
+                grad.addColorStop(1,'#020617');
                 ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
+                
                 if(sLogo){ ctx.globalAlpha=0.1; ctx.drawImage(sLogo,300,300,900,900); ctx.globalAlpha=1.0; }
                 
-                ctx.fillStyle='#0f172a'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
-                ctx.fillStyle='#fff'; ctx.font='900 italic 55px sans-serif'; ctx.textAlign='left'; ctx.fillText('SPORTZWIRE',40,85);
+                // SportzWire Banner overlay mixed with team color
+                ctx.fillStyle=hexToRgba(swBlue, 0.15); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,160); ctx.lineTo(0,120); ctx.fill();
+                
+                if (swLogoImg) {
+                    const lH = 65; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    ctx.drawImage(swLogoImg, 40, 35, lW, lH);
+                } else {
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 55px sans-serif'; ctx.textAlign='left'; ctx.fillText('SPORTZWIRE',40,85);
+                }
+                
                 if(meet){ ctx.fillStyle='#9cb9d1'; ctx.font='bold 24px sans-serif'; ctx.textAlign='right'; ctx.fillText(meet.name.toUpperCase(),1040,65); }
+
+                // Dynamic vertical spacing to prevent overlap
+                let maxPH = 540;
+                if (ruData.length > 0) maxPH = 400;
+                if (ruData.length > 2) maxPH = 300; 
 
                 let y = 160;
                 if (pImg) {
-                    const ph = ruData.length>0?420:540;
                     ctx.save(); ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=30;
-                    ctx.beginPath(); ctx.roundRect(60,160,960,ph,20); ctx.fill(); ctx.clip();
-                    let dW, dH; const iA=pImg.width/pImg.height, tA=960/ph;
-                    if(iA>tA){ dH=ph; dW=ph*iA; } else { dW=960; dH=960/iA; }
-                    ctx.drawImage(pImg,60+(960-dW)/2,160+(ph-dH)/2,dW,dH);
+                    ctx.beginPath(); ctx.roundRect(60,160,960,maxPH,20); ctx.fill(); ctx.clip();
+                    let dW, dH; const iA=pImg.width/pImg.height, tA=960/maxPH;
+                    if(iA>tA){ dH=maxPH; dW=maxPH*iA; } else { dW=960; dH=960/iA; }
+                    ctx.drawImage(pImg,60+(960-dW)/2,160+(maxPH-dH)/2,dW,dH);
                     ctx.restore();
-                    ctx.strokeStyle=sColor; ctx.lineWidth=10; ctx.strokeRect(60,160,960,ph);
-                    y = 160+ph+60;
-                } else { y = 400; }
+                    ctx.strokeStyle=sColor; ctx.lineWidth=10; ctx.strokeRect(60,160,960,maxPH);
+                    y = 160+maxPH+50;
+                } else { y = 350; }
 
                 ctx.textAlign='center';
-                if(event){ ctx.fillStyle='#9cb9d1'; ctx.font='900 italic 45px sans-serif'; ctx.fillText(event.toUpperCase(),w/2,y); y+=65; }
+                if(event){ ctx.fillStyle='#9cb9d1'; ctx.font='900 italic 45px sans-serif'; ctx.fillText(event.toUpperCase(),w/2,y, 900); y+=60; }
                 const name = gType==='individual'?athlete:(school?school.name:'');
-                if(name){ ctx.fillStyle='#fff'; ctx.font='bold 80px sans-serif'; ctx.fillText(name.toUpperCase(),w/2,y); y+=70; }
+                if(name){ ctx.fillStyle='#fff'; ctx.font='bold 80px sans-serif'; ctx.fillText(name.toUpperCase(),w/2,y, 960); y+=70; }
 
                 if (mark) {
-                    const lS=150, mW=ctx.measureText(mark).width;
+                    const lS=150, mW=Math.min(ctx.measureText(mark).width, 500);
                     let x = (w-(mW+(sLogo?lS+30:0)))/2;
                     if(sLogo){ ctx.drawImage(sLogo,x,y-120,lS,lS); x+=lS+30; }
-                    ctx.fillStyle='#facc15'; ctx.textAlign='left'; ctx.font='900 italic 110px sans-serif'; ctx.fillText(mark,x,y); y+=40;
+                    ctx.fillStyle='#facc15'; ctx.textAlign='left'; ctx.font='900 italic 110px sans-serif'; ctx.fillText(mark,x,y, 500); y+=40;
                 }
 
                 if (ruData.length > 0) {
-                    y+=20; ctx.fillStyle='rgba(15,23,42,0.8)'; ctx.beginPath(); ctx.roundRect(80,y-40,920,ruData.length*75,20); ctx.fill();
+                    y+=20; ctx.fillStyle='rgba(15,23,42,0.8)'; ctx.beginPath(); ctx.roundRect(80,y-40,920,ruData.length*70,20); ctx.fill();
                     ruData.forEach((ru, i) => {
                         let rx=120;
                         if(ru.logo){ ctx.drawImage(ru.logo,rx,y-36,50,50); rx+=75; }
                         ctx.fillStyle=i===0?'#e2e8f0':i===1?'#fba928':'#9ca3af';
-                        ctx.font='bold 32px sans-serif'; ctx.textAlign='left'; ctx.fillText(`${ru.place}: ${schools.find(s=>s.id===ru.schoolId)?.name || ''}`,rx,y);
-                        ctx.fillStyle='#facc15'; ctx.textAlign='right'; ctx.fillText(ru.mark,960,y); y+=75;
+                        ctx.font='bold 32px sans-serif'; ctx.textAlign='left'; ctx.fillText(`${ru.place}: ${schools.find(s=>s.id===ru.schoolId)?.name || ''}`,rx,y, 500);
+                        ctx.fillStyle='#facc15'; ctx.textAlign='right'; ctx.fillText(ru.mark,960,y, 200); y+=70;
                     });
                 }
             } else if (gStyle === 'splash') {
@@ -684,46 +834,58 @@
                 ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=12;
                 for(let i=0; i<8; i++){ ctx.beginPath(); ctx.moveTo(100+(i*120),0); ctx.lineTo(-400+(i*280),h); ctx.stroke(); }
 
-                ctx.fillStyle='#0a1930'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
-                ctx.fillStyle='#fff'; ctx.font='900 italic 80px sans-serif'; ctx.textAlign='center'; ctx.fillText('SPORTZWIRE', w/2, 100);
+                ctx.fillStyle=hexToRgba(sColor, 0.3); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,140); ctx.lineTo(0,80); ctx.fill();
+                
+                if (swLogoImg) {
+                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    ctx.drawImage(swLogoImg, w/2 - lW/2, 20, lW, lH);
+                } else {
+                    ctx.fillStyle='#fff'; ctx.font='900 italic 80px sans-serif'; ctx.textAlign='center'; ctx.fillText('SPORTZWIRE', w/2, 100);
+                }
+
+                // Dynamic max photo height
+                let maxPH = 480;
+                if (ruData.length > 2) maxPH = 350;
 
                 if(pImg){
                     ctx.save(); ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=50;
-                    ctx.beginPath(); ctx.roundRect(100,160,880,480,0); ctx.fill(); ctx.clip();
-                    let dW, dH; const iA=pImg.width/pImg.height, tA=880/480;
-                    if(iA>tA){ dH=480; dW=480*iA; } else { dW=880; dH=880/iA; }
-                    ctx.drawImage(pImg, 100+(880-dW)/2, 160+(480-dH)/2, dW, dH);
+                    ctx.beginPath(); ctx.roundRect(100,160,880,maxPH,0); ctx.fill(); ctx.clip();
+                    let dW, dH; const iA=pImg.width/pImg.height, tA=880/maxPH;
+                    if(iA>tA){ dH=maxPH; dW=maxPH*iA; } else { dW=880; dH=880/iA; }
+                    ctx.drawImage(pImg, 100+(880-dW)/2, 160+(maxPH-dH)/2, dW, dH);
                     ctx.restore();
                     
-                    ctx.strokeStyle=sColor; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(100,640); ctx.lineTo(980,640); ctx.stroke();
+                    ctx.strokeStyle=sColor; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(100,160+maxPH); ctx.lineTo(980,160+maxPH); ctx.stroke();
                     ctx.globalAlpha=0.3; ctx.lineWidth=24; ctx.stroke(); ctx.globalAlpha=1.0;
                 }
 
-                let y = 720;
+                let y = pImg ? 160 + maxPH + 70 : 400;
                 ctx.textAlign='center';
-                if(event){ ctx.fillStyle=sColor; ctx.font='900 italic 55px sans-serif'; ctx.fillText(event.toUpperCase(), w/2, y); y+=65; }
+                if(event){ ctx.fillStyle=sColor; ctx.font='900 italic 55px sans-serif'; ctx.fillText(event.toUpperCase(), w/2, y, 900); y+=65; }
                 const n = gType==='individual'?athlete:(school?school.name:'');
-                if(n){ ctx.fillStyle='#fff'; ctx.font='bold 75px sans-serif'; ctx.fillText(n.toUpperCase(), w/2, y); y+=85; }
+                if(n){ ctx.fillStyle='#fff'; ctx.font='bold 75px sans-serif'; ctx.fillText(n.toUpperCase(), w/2, y, 960); y+=85; }
 
                 if(mark){
-                    const lS=160, mW=ctx.measureText(mark).width;
+                    const lS=160, mW=Math.min(ctx.measureText(mark).width, 500);
                     let x = (w-(mW+(sLogo?lS+40:0)))/2;
                     if(sLogo){ ctx.shadowColor=sColor; ctx.shadowBlur=30; ctx.drawImage(sLogo, x, y-130, lS, lS); ctx.shadowBlur=0; x+=lS+40; }
-                    ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.font='900 italic 130px sans-serif'; ctx.fillText(mark, x, y); y+=60;
+                    ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.font='900 italic 130px sans-serif'; ctx.fillText(mark, x, y, 500); y+=60;
                 }
 
                 if(ruData.length > 0){
-                    y+=30; ctx.textAlign='left';
+                    y+=20; ctx.textAlign='left';
                     ruData.forEach(ru => {
                         let rx = 180;
                         if(ru.logo){ ctx.drawImage(ru.logo, rx, y-34, 44, 44); rx+=60; }
-                        ctx.fillStyle='#94a3b8'; ctx.font='bold 32px sans-serif'; ctx.fillText(`${ru.place}: ${schools.find(s=>s.id===ru.schoolId)?.name || ''}`, rx, y);
-                        ctx.fillStyle='#fff'; ctx.textAlign='right'; ctx.fillText(ru.mark, 900, y);
+                        ctx.fillStyle='#94a3b8'; ctx.font='bold 32px sans-serif'; ctx.fillText(`${ru.place}: ${schools.find(s=>s.id===ru.schoolId)?.name || ''}`, rx, y, 450);
+                        ctx.fillStyle='#fff'; ctx.textAlign='right'; ctx.fillText(ru.mark, 900, y, 200);
                         ctx.textAlign='left'; y+=50;
                     });
                 }
             } else if (gStyle === 'poster') {
-                const splitY = 850;
+                // Ensure room for leaderboard 1350 Canvas height
+                // Leaderboard starts at 1020, leaves 330px for 5 lines.
+                const splitY = 750;
                 ctx.fillStyle = '#0f0a0a'; ctx.fillRect(0, 0, w, h);
 
                 if (pImg) {
@@ -735,9 +897,19 @@
                     ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, w, splitY + 50);
                 }
 
+                // SW custom logo top overlay
+                if (swLogoImg) {
+                    const lH = 80; const lW = swLogoImg.width * (lH / swLogoImg.height);
+                    ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
+                    ctx.drawImage(swLogoImg, w/2 - lW/2, 40, lW, lH);
+                    ctx.shadowBlur=0;
+                }
+
+                // Dual gradient using school color and SportzWire Blue
                 ctx.fillStyle = sColor; ctx.fillRect(0, splitY, w, h - splitY);
                 const bGrad = ctx.createLinearGradient(0, splitY, 0, h);
-                bGrad.addColorStop(0, 'rgba(0,0,0,0.1)'); bGrad.addColorStop(1, 'rgba(0,0,0,0.9)');
+                bGrad.addColorStop(0, 'rgba(0,0,0,0.1)'); 
+                bGrad.addColorStop(1, hexToRgba(swBlue, 0.9)); // Blend to SW Blue
                 ctx.fillStyle = bGrad; ctx.fillRect(0, splitY, w, h - splitY);
 
                 ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.font = '900 240px "Impact", "Arial Black", sans-serif';
@@ -754,9 +926,9 @@
 
                 ctx.fillStyle = '#e2e8f0'; ctx.font = '900 32px sans-serif';
                 const meetText = meet?.name || 'TRACK MEET'; const evtText = event || 'EVENT';
-                ctx.fillText(`${meetText}  •  ${evtText}`.toUpperCase(), w / 2, splitY + 240);
+                ctx.fillText(`${meetText}  •  ${evtText}`.toUpperCase(), w / 2, splitY + 240, 960);
 
-                let startY = splitY + 290;
+                let startY = splitY + 270;
                 const validItems = [{ place: '1st', schoolId: school?.id, mark: mark, logo: sLogo }].concat(ruData).filter(item => item.schoolId || item.mark || (item.place === '1st' && athlete));
                 
                 if (validItems.length > 0) {
@@ -772,8 +944,8 @@
                         let lx = 170;
                         if (item.logo) { ctx.drawImage(item.logo, lx, ry - 26, 32, 32); lx += 45; }
 
-                        ctx.fillStyle = '#ffffff'; ctx.fillText(sName ? sName.toUpperCase() : '', lx, ry);
-                        if (item.mark) { ctx.fillStyle = idx === 0 ? '#facc15' : '#ffffff'; ctx.textAlign = 'right'; ctx.fillText(item.mark, w - 110, ry); }
+                        ctx.fillStyle = '#ffffff'; ctx.fillText(sName ? sName.toUpperCase() : '', lx, ry, 450);
+                        if (item.mark) { ctx.fillStyle = idx === 0 ? '#facc15' : '#ffffff'; ctx.textAlign = 'right'; ctx.fillText(item.mark, w - 110, ry, 200); }
                         ry += itemHeight;
                     });
                 }
@@ -786,7 +958,6 @@
             if (spLogo) {
                 const sW=180, sH=sW*(spLogo.height/spLogo.width);
                 ctx.drawImage(spLogo, w-sW-40, h-sH-30, sW, sH);
-                ctx.fillStyle='#9cb9d1'; ctx.font='bold 16px sans-serif'; ctx.textAlign='right'; ctx.fillText('SPONSORED BY', w-40, h-sH-40);
             }
             window.updateCaption();
         };
@@ -815,24 +986,53 @@
         };
 
         window.generateAndSave = async () => {
-            const u = canvas.toDataURL('image/jpeg', 0.9), id = Date.now().toString();
-            const rData = { meetName: meets.find(x=>x.id===document.getElementById('gen-meet').value)?.name||'Unknown', eventName: document.getElementById('gen-event').value, athleteName: document.getElementById('gen-athlete').value, schoolName: schools.find(s=>s.id===document.getElementById('gen-school').value)?.name||'Unknown', mark: document.getElementById('gen-mark').value, recordType: document.getElementById('gen-record').value, timestamp: Date.now() };
+            const u = canvas.toDataURL('image/jpeg', 0.9);
+            // If editing, use existing ID. Otherwise create new.
+            const id = editingId ? editingId : Date.now().toString();
+            
+            const mid = document.getElementById('gen-meet').value, sid = document.getElementById('gen-school').value;
+            
+            // Build the state object to allow easy editing later
+            const genState = {
+                meetId: mid,
+                event: document.getElementById('gen-event').value,
+                athlete: document.getElementById('gen-athlete').value,
+                schoolId: sid,
+                mark: document.getElementById('gen-mark').value,
+                record: document.getElementById('gen-record').value,
+                type: gType,
+                style: gStyle,
+                photo: gPhoto,
+                runnerUps: JSON.parse(JSON.stringify(runnerUps))
+            };
+
+            const rData = { id: id, meetName: meets.find(x=>x.id===mid)?.name||'Unknown', eventName: genState.event, athleteName: genState.athlete, schoolName: schools.find(s=>s.id===sid)?.name||'Unknown', mark: genState.mark, recordType: genState.record, timestamp: Date.now(), state: genState };
             
             const tC = document.createElement('canvas'); 
             tC.width=300; tC.height=(canvas.height/canvas.width)*300; 
             tC.getContext('2d').drawImage(canvas,0,0,tC.width,tC.height);
             
-            const hData = { previewUrl: tC.toDataURL('image/jpeg', 0.6), date: new Date().toLocaleDateString(), data: rData };
+            const hData = { id: id, previewUrl: tC.toDataURL('image/jpeg', 0.6), date: new Date().toLocaleDateString(), data: rData, state: genState };
             
-            results.unshift(rData);
-            history.unshift(hData);
+            if (editingId) {
+                const eIndexR = results.findIndex(x => x.id === editingId);
+                if (eIndexR >= 0) results[eIndexR] = rData;
+                
+                const eIndexH = history.findIndex(x => x.id === editingId);
+                if (eIndexH >= 0) history[eIndexH] = hData;
+            } else {
+                results.unshift(rData);
+                history.unshift(hData);
+            }
+            
             saveData();
-            
             renderResults();
             renderHistory();
 
+            window.clearGenerator(); // Clear edit mode cleanly
+
             const l = document.createElement('a'); l.download=`sportzwire-${id}.jpg`; l.href=u; l.click();
-            window.showSuccess("Graphic Saved Successfully! ✅");
+            window.showSuccess("Graphic Saved & Logged Successfully! ✅");
         };
 
         function renderResults() {
@@ -843,10 +1043,25 @@
                 <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-lg">
                     <div class="bg-slate-800 p-3 font-black text-xs uppercase tracking-widest text-sky-400">${m}</div>
                     <div class="divide-y divide-slate-800">
-                        ${rs.map(r=>`<div class="p-4 flex justify-between items-center"><div><div class="font-bold text-white">${r.eventName}</div><div class="text-xs text-slate-400">${r.athleteName?r.athleteName+' - ':''}${r.schoolName}</div></div><div class="text-right"><div class="font-black text-yellow-400">${r.mark}</div>${r.recordType!=='None'?`<span class="text-[8px] bg-red-600 px-1 rounded font-black">${r.recordType}</span>`:''}</div></div>`).join('')}
+                        ${rs.map(r=>`
+                            <div class="p-4 flex justify-between items-center group">
+                                <div>
+                                    <div class="font-bold text-white">${r.eventName}</div>
+                                    <div class="text-xs text-slate-400">${r.athleteName?r.athleteName+' - ':''}${r.schoolName}</div>
+                                </div>
+                                <div class="text-right flex items-center gap-4">
+                                    <div>
+                                        <div class="font-black text-yellow-400">${r.mark}</div>
+                                        ${r.recordType!=='None'?`<span class="text-[8px] bg-red-600 px-1 rounded font-black">${r.recordType}</span>`:''}
+                                    </div>
+                                    <button onclick="window.loadState('${r.id}', 'results')" class="text-slate-500 hover:text-sky-400 p-2"><i data-lucide="edit" size="16"></i></button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `).join('');
+            if(window.lucide) window.lucide.createIcons();
         }
 
         function renderHistory() {
@@ -857,6 +1072,7 @@
                         <div class="text-xs font-black text-white uppercase">${h.data.eventName}</div>
                         <div class="text-[10px] text-slate-500">${h.date}</div>
                     </div>
+                    <button onclick="window.loadState('${h.id}', 'history')" class="p-4 text-slate-600 hover:text-sky-400 transition-colors"><i data-lucide="edit" size="18"></i></button>
                     <button onclick="history.splice(${i}, 1); saveData(); renderHistory();" class="p-4 text-slate-700 hover:text-red-500 transition-colors"><i data-lucide="trash-2" size="18"></i></button>
                 </div>
             `).join('');
